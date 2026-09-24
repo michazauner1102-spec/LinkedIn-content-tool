@@ -294,7 +294,7 @@ function renderPreview(box, text, s) {
 
 function renderChecker(box, text, s) {
   const { score, checks } = checkPost(text, s);
-  const color = score >= 75 ? 'var(--ok)' : score >= 50 ? 'var(--mid)' : 'var(--bad)';
+  const color = 'var(--primary)';
   const verdict = !text.trim() ? 'Noch leer' : score >= 75 ? 'Bereit zum Posten 🚀' : score >= 50 ? 'Fast da – ein paar Feinschliffe' : 'Noch Luft nach oben';
   box.innerHTML = `
     <div class="score"><div class="ring" style="--v:${score}; --c:${color}"><span>${score}</span></div>

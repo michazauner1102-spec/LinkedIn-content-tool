@@ -248,6 +248,9 @@ export const GRAPHIC_TEMPLATES = [
 ];
 
 export const THEMES = [
+  { id: 'white', name: 'Weiß', bg: '#ffffff', bg2: '#f4f4f4', fg: '#0a0a0a', accent: '#0a0a0a', muted: 'rgba(10,10,10,.6)' },
+  { id: 'grey', name: 'Hellgrau', bg: '#ededed', bg2: '#e0e0e0', fg: '#0a0a0a', accent: '#0a0a0a', muted: 'rgba(10,10,10,.6)' },
+  { id: 'black', name: 'Schwarz', bg: '#0a0a0a', bg2: '#1c1c1c', fg: '#ffffff', accent: '#ffffff', muted: 'rgba(255,255,255,.7)' },
   { id: 'blue', name: 'Blau', bg: '#1d4ed8', bg2: '#3b82f6', fg: '#ffffff', accent: '#fde047', muted: 'rgba(255,255,255,.75)' },
   { id: 'night', name: 'Nacht', bg: '#0f172a', bg2: '#1e293b', fg: '#f8fafc', accent: '#38bdf8', muted: 'rgba(248,250,252,.7)' },
   { id: 'paper', name: 'Papier', bg: '#faf7f2', bg2: '#f1ebe0', fg: '#1c1917', accent: '#c2410c', muted: 'rgba(28,25,23,.65)' },

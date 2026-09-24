@@ -37,7 +37,7 @@ export function render(el, { navigate }) {
       <section class="card">
         <h2>Darstellung</h2>
         <div class="chips" style="margin-top:12px">
-          ${[['auto', 'System'], ['light', 'Hell'], ['dark', 'Dunkel']].map(([v, l]) => `<button class="chip ${(localTheme() || 'auto') === v ? 'on' : ''}" data-theme="${v}">${l}</button>`).join('')}
+          ${[['light', 'Hell (Weiß/Grau)'], ['dark', 'Dunkel (Schwarz)']].map(([v, l]) => `<button class="chip ${(localTheme() || 'light') === v ? 'on' : ''}" data-theme="${v}">${l}</button>`).join('')}
         </div>
       </section>
     </div>`;

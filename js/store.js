@@ -12,7 +12,7 @@ const DEFAULT_STATE = {
   ideas: [], // { id, pillarId, type, hook, angle, saved, createdAt }
   drafts: [], // { id, text, pillarId, type, status, scheduledAt, createdAt, updatedAt }
   swipe: [], // eigene gesammelte Posts: { id, author, text, niche, type, note, likes }
-  graphicPrefs: { theme: 'blue', format: 'square', showAuthor: true, handle: '' },
+  graphicPrefs: { theme: 'white', format: 'square', showAuthor: true, handle: '' },
   carousel: { slides: [], pageNumbers: true },
   settings: { apiKey: '', model: 'claude-opus-5' },
 };
