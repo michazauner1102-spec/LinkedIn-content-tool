@@ -12,7 +12,7 @@ const DEFAULT_STATE = {
   ideas: [], // { id, pillarId, type, hook, angle, saved, createdAt }
   drafts: [], // { id, text, pillarId, type, status, scheduledAt, createdAt, updatedAt }
   swipe: [], // eigene gesammelte Posts: { id, author, text, niche, type, note, likes }
-  graphicPrefs: { theme: 'blue', format: 'square', showAuthor: true, handle: '' },
+  graphicPrefs: { theme: 'blue', format: 'square', showAuthor: false, handle: '', v: 2 },
   carousel: { slides: [], pageNumbers: true },
   settings: { apiKey: '', model: 'claude-opus-5' },
 };
@@ -25,6 +25,8 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(DEFAULT_STATE);
     const parsed = JSON.parse(raw);
+    // v2: Namens-Stempel auf Grafiken ist nicht mehr voreingestellt
+    if (parsed.graphicPrefs && parsed.graphicPrefs.v !== 2) Object.assign(parsed.graphicPrefs, { showAuthor: false, v: 2 });
     return deepMerge(structuredClone(DEFAULT_STATE), parsed);
   } catch {
     return structuredClone(DEFAULT_STATE);

@@ -4,7 +4,7 @@ import { checkPost, localDraft, skeletonFromViral, toUnicode, localIdeas, toDu }
 import { aiEnabled, aiWritePost, aiRewrite, aiHooks, aiAdaptViral } from '../ai.js';
 import { createDraft } from '../plan.js';
 import { findDailyPost } from '../daily.js';
-import { esc, initials, copyText, toast, busy, toLocalInput, openModal, typeLabel } from '../ui.js';
+import { esc, copyText, toast, busy, toLocalInput, openModal, typeLabel } from '../ui.js';
 
 let device = 'mobile';
 // Merkt sich, ob ein frisch aus einer Idee erstellter Entwurf automatisch per KI ausformuliert werden soll.
@@ -77,10 +77,6 @@ export function render(el, { navigate, params }) {
             <button class="btn btn-sm" data-fmt="italic" title="Markierten Text kursiv (Unicode)"><i>I</i></button>
             <button class="btn btn-sm" data-ins="→ ">→</button>
             <button class="btn btn-sm" data-ins="• ">•</button>
-            <button class="btn btn-sm" data-ins="✅ ">✅</button>
-            <button class="btn btn-sm" data-ins="👉 ">👉</button>
-            <button class="btn btn-sm" data-ins="💡 ">💡</button>
-            <button class="btn btn-sm" data-ins="♻️ ">♻️</button>
             <span class="spacer"></span>
             <button class="btn btn-sm" id="tpls">Vorlage einfügen</button>
             <button class="btn btn-sm" id="hooks">Hook-Ideen</button>
@@ -301,7 +297,7 @@ function renderPreview(box, text, s) {
   }
   box.innerHTML = `
     <div class="li-preview ${device}">
-      <div class="li-head"><span class="avatar">${initials(name)}</span>
+      <div class="li-head">
         <div><div class="li-name">${esc(name)} · 1.</div><div class="li-sub">${esc(sub)}</div><div class="li-sub">Jetzt</div></div></div>
       <div class="li-text">${esc(shown) || '<span style="color:#999">Hier erscheint die Vorschau …</span>'}${truncated ? '<span class="more" data-more>… mehr</span>' : ''}${expanded && text.length > limit ? ' <span class="more" data-more>weniger</span>' : ''}</div>
       <div class="li-actions"><span>Gefällt mir</span><span>Kommentieren</span><span>Reposten</span><span>Senden</span></div>

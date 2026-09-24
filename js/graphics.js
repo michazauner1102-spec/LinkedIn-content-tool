@@ -42,17 +42,15 @@ export function renderGraphic(canvas, tpl, opts) {
 
 function drawFooter(ctx, { W, H, P, theme, scale, author, handle }) {
   const y = H - P - 70 * scale;
-  ctx.fillStyle = theme.accent;
-  ctx.fillRect(P, y + 6 * scale, 6 * scale, 58 * scale);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = theme.fg;
   ctx.font = `700 ${30 * scale}px ${FONT}`;
-  ctx.fillText(author, P + 26 * scale, y + 30 * scale);
+  ctx.fillText(author, P, y + 30 * scale);
   if (handle) {
     ctx.fillStyle = theme.muted;
     ctx.font = `500 ${24 * scale}px ${FONT}`;
-    ctx.fillText(handle, P + 26 * scale, y + 62 * scale);
+    ctx.fillText(handle, P, y + 62 * scale);
   }
 }
 
@@ -277,17 +275,13 @@ const RENDERERS = {
     ctx.fill();
     ctx.shadowBlur = 0;
     const px = area.x + 48 * scale;
-    ctx.fillStyle = theme.accent;
-    ctx.beginPath();
-    ctx.arc(px + 36 * scale, y + 84 * scale, 36 * scale, 0, Math.PI * 2);
-    ctx.fill();
     ctx.fillStyle = '#0f172a';
     ctx.font = `700 ${32 * scale}px ${FONT}`;
     ctx.textBaseline = 'top';
-    ctx.fillText(f.subtitle || 'Ihr Name', px + 96 * scale, y + 52 * scale);
+    ctx.fillText(f.subtitle || 'Ihr Name', px, y + 52 * scale);
     ctx.fillStyle = '#64748b';
     ctx.font = `500 ${24 * scale}px ${FONT}`;
-    ctx.fillText('LinkedIn · 1 Std.', px + 96 * scale, y + 94 * scale);
+    ctx.fillText('vor 1 Std.', px, y + 94 * scale);
     ctx.fillStyle = '#0f172a';
     const t = fitText(ctx, f.title, { maxW: area.w - 96 * scale, maxH: cardH - 260 * scale, weight: 500, start: 52 * scale, min: 24 * scale, lh: 1.35 });
     drawLines(ctx, t.lines, px, y + 170 * scale, t.lh);

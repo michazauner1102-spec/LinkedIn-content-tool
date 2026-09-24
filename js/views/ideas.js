@@ -41,7 +41,7 @@ export function render(el, { navigate }) {
 
     ${tab === 'vorlagen' ? templateGrid(s, filter.type)
       : list.length ? `<div class="grid g3">${list.map((i) => card(i, s)).join('')}</div>`
-      : `<div class="empty"><p>Noch keine gespeicherten Ideen. Speichere Vorschläge mit ☆.</p></div>`}`;
+      : `<div class="empty"><p>Noch keine gespeicherten Ideen. Speichere Vorschläge mit „Merken“.</p></div>`}`;
 
   const rerender = () => render(el, { navigate });
   el.querySelector('#f-pillar').addEventListener('change', (e) => { filter.pillarId = e.target.value; fresh = []; rerender(); });
@@ -106,7 +106,7 @@ function card(i, s) {
     <div class="hook">${esc(i.hook)}</div>
     ${i.angle ? `<div class="small muted">${esc(i.angle)}</div>` : ''}
     <div class="row"><button class="link" data-write="${i.id}">Post schreiben →</button><span class="spacer"></span>
-      <button class="icon-btn" data-save="${i.id}" title="${saved ? 'Gespeichert' : 'Speichern'}">${saved ? '★' : '☆'}</button></div>
+      <button class="btn btn-sm btn-ghost" data-save="${i.id}">${saved ? 'Gemerkt' : 'Merken'}</button></div>
   </div>`;
 }
 
