@@ -71,10 +71,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: flex; flex-direction: column; padding: 18px 16px; position: sticky; top: 0; height: 100vh;
 }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 6px 18px; }
-.logo {
-  width: 34px; height: 34px; border-radius: 9px; background: var(--primary); color: var(--on-primary);
-  display: grid; place-items: center; font-weight: 900; font-size: 18px;
-}
 .brand-name { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; flex: 1; }
 .btn-write { width: 100%; justify-content: center; padding: 12px; font-size: 16px; }
 .nav { margin-top: 18px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
@@ -345,5 +341,4 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
   .heat { grid-template-columns: 56px repeat(7, 1fr); }
 }
 
-/* Emojis in Bedienelementen monochrom halten (Farbschema: Hellgrau · Weiß · Schwarz) */
-.nav .ico, .nav-set, .stuck, .btn, .tabs button, .tag, .chip, .step, .type-opt .ic, .metrics, .card-head h2, .card-head h3, .banner > span { filter: grayscale(1); }
+.tpl-preview { white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }

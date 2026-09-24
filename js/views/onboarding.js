@@ -166,7 +166,7 @@ function audience(s) {
   const goals = [...new Set([...(AUDIENCE_PRESETS[s.profile.niche]?.goals || GENERIC_GOALS), ...s.audience.goals])];
   return `
     <div class="row"><h2>Für wen schreibst du?</h2><span class="spacer"></span>
-      ${AUDIENCE_PRESETS[s.profile.niche] ? '<button class="btn btn-sm" data-preset>⚡ Vorschlag für meine Nische</button>' : ''}</div>
+      ${AUDIENCE_PRESETS[s.profile.niche] ? '<button class="btn btn-sm" data-preset>Vorschlag für meine Nische</button>' : ''}</div>
     <p class="muted" style="margin:4px 0 22px">Je genauer die Zielgruppe, desto relevanter die Posts. Schreib für eine Person, nicht für alle.</p>
     <div class="grid g2">
       <label class="field">Kurzbezeichnung <span class="hint">So wird die Zielgruppe in Hooks genannt</span>
@@ -215,7 +215,6 @@ function types(s) {
       ${POST_TYPES.map((t) => {
         const on = s.postTypes.includes(t.id);
         return `<div class="type-opt ${on ? 'on' : ''}" data-toggle="root.postTypes" data-value="${t.id}" role="checkbox" aria-checked="${on}" tabindex="0">
-          <span class="ic">${t.icon}</span>
           <div><b>${on ? '✓ ' : ''}${t.label}</b><small>${t.desc}</small>
           <div class="dots"><span>Reichweite ${'●'.repeat(t.reach)}${'○'.repeat(5 - t.reach)}</span><span>Vertrauen ${'●'.repeat(t.trust)}${'○'.repeat(5 - t.trust)}</span><span>Leads ${'●'.repeat(t.leads)}${'○'.repeat(5 - t.leads)}</span></div></div>
         </div>`;

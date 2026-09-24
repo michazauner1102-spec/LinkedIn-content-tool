@@ -42,31 +42,17 @@ export function renderGraphic(canvas, tpl, opts) {
 
 function drawFooter(ctx, { W, H, P, theme, scale, author, handle }) {
   const y = H - P - 70 * scale;
-  const r = 34 * scale;
   ctx.fillStyle = theme.accent;
-  ctx.beginPath();
-  ctx.arc(P + r, y + r, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = theme.bg;
-  ctx.font = `800 ${30 * scale}px ${FONT}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const initials = author
-    .split(/\s+/)
-    .map((x) => x[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-  ctx.fillText(initials, P + r, y + r + 1);
+  ctx.fillRect(P, y + 6 * scale, 6 * scale, 58 * scale);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = theme.fg;
   ctx.font = `700 ${30 * scale}px ${FONT}`;
-  ctx.fillText(author, P + 2 * r + 20 * scale, y + r - 4 * scale);
+  ctx.fillText(author, P + 26 * scale, y + 30 * scale);
   if (handle) {
     ctx.fillStyle = theme.muted;
     ctx.font = `500 ${24 * scale}px ${FONT}`;
-    ctx.fillText(handle, P + 2 * r + 20 * scale, y + r + 28 * scale);
+    ctx.fillText(handle, P + 26 * scale, y + 62 * scale);
   }
 }
 
@@ -275,7 +261,7 @@ const RENDERERS = {
 
   hottake(ctx, { area, theme, f, scale }) {
     let y = area.y;
-    if (f.subtitle) y += pill(ctx, `🔥 ${f.subtitle}`, area.x, y, theme, scale) + 50 * scale;
+    if (f.subtitle) y += pill(ctx, f.subtitle, area.x, y, theme, scale) + 50 * scale;
     ctx.fillStyle = theme.fg;
     const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.y + area.h - y, weight: 900, start: 130 * scale, min: 40 * scale, lh: 1.08 });
     drawLines(ctx, t.lines, area.x, y + (area.y + area.h - y - t.height) / 2, t.lh);
@@ -307,7 +293,7 @@ const RENDERERS = {
     drawLines(ctx, t.lines, px, y + 170 * scale, t.lh);
     ctx.fillStyle = '#64748b';
     ctx.font = `500 ${24 * scale}px ${FONT}`;
-    ctx.fillText('👍 ❤️ 💡  1.024 · 87 Kommentare', px, y + cardH - 70 * scale);
+    ctx.fillText('1.024 Reaktionen · 87 Kommentare', px, y + cardH - 70 * scale);
     void W;
   },
 
@@ -396,6 +382,240 @@ const RENDERERS = {
       ctx.fillText(f.subtitle, W / 2, area.y + 320 * scale + t.height);
     }
     ctx.textAlign = 'left';
+  },
+  numbered(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.h * 0.25, start: 72 * scale, min: 32 * scale });
+    drawLines(ctx, t.lines, area.x, area.y, t.lh);
+    const list = items(f.items);
+    const top = area.y + t.height + 50 * scale;
+    const rowH = (area.y + area.h - top) / Math.max(list.length, 1);
+    list.forEach((it, i) => {
+      const y = top + i * rowH;
+      ctx.fillStyle = theme.accent;
+      ctx.font = `900 ${Math.min(rowH * 0.8, 150 * scale)}px ${FONT}`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), area.x, y + rowH / 2);
+      ctx.fillStyle = theme.fg;
+      const r = fitText(ctx, it, { maxW: area.w - 150 * scale, maxH: rowH * 0.9, weight: 700, start: 50 * scale, min: 22 * scale, lh: 1.2 });
+      ctx.textBaseline = 'top';
+      drawLines(ctx, r.lines, area.x + 140 * scale, y + (rowH - r.height) / 2, r.lh);
+    });
+  },
+
+  kpis(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.h * 0.22, start: 68 * scale, min: 30 * scale });
+    drawLines(ctx, t.lines, area.x, area.y, t.lh);
+    const list = items(f.items).slice(0, 4).map((x) => x.split('|'));
+    const top = area.y + t.height + 50 * scale;
+    const gap = 24 * scale;
+    const h = area.y + area.h - top;
+    const rowH = (h - gap * (list.length - 1)) / Math.max(list.length, 1);
+    list.forEach(([val, label = ''], i) => {
+      const y = top + i * (rowH + gap);
+      ctx.fillStyle = 'rgba(127,127,127,.14)';
+      roundRect(ctx, area.x, y, area.w, rowH, 24 * scale);
+      ctx.fill();
+      ctx.fillStyle = theme.accent;
+      ctx.font = `900 ${Math.min(rowH * 0.5, 110 * scale)}px ${FONT}`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(val.trim(), area.x + 36 * scale, y + rowH / 2, area.w * 0.45);
+      ctx.fillStyle = theme.fg;
+      ctx.font = `600 ${Math.min(rowH * 0.22, 40 * scale)}px ${FONT}`;
+      ctx.fillText(label.trim(), area.x + area.w * 0.5, y + rowH / 2, area.w * 0.47);
+    });
+    ctx.textBaseline = 'top';
+  },
+
+  compare(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.h * 0.2, start: 64 * scale, min: 30 * scale });
+    drawLines(ctx, t.lines, area.x, area.y, t.lh);
+    const [ha = 'A', hb = 'B'] = String(f.subtitle || '').split('|');
+    const rows = items(f.items).map((x) => x.split('|'));
+    const top = area.y + t.height + 40 * scale;
+    const c0 = area.w * 0.36;
+    const cw = (area.w - c0) / 2;
+    const rowH = Math.min(130 * scale, (area.y + area.h - top) / (rows.length + 1));
+    ctx.fillStyle = theme.accent;
+    roundRect(ctx, area.x + c0, top, cw * 2, rowH, 16 * scale);
+    ctx.fill();
+    ctx.fillStyle = theme.bg;
+    ctx.font = `800 ${Math.min(rowH * 0.34, 36 * scale)}px ${FONT}`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ha.trim(), area.x + c0 + 20 * scale, top + rowH / 2, cw - 30 * scale);
+    ctx.fillText(hb.trim(), area.x + c0 + cw + 20 * scale, top + rowH / 2, cw - 30 * scale);
+    rows.forEach(([k, a = '', b = ''], i) => {
+      const y = top + (i + 1) * rowH;
+      ctx.strokeStyle = theme.muted;
+      ctx.globalAlpha = 0.35;
+      ctx.lineWidth = 2 * scale;
+      ctx.beginPath();
+      ctx.moveTo(area.x, y + rowH);
+      ctx.lineTo(area.x + area.w, y + rowH);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = theme.fg;
+      ctx.font = `700 ${Math.min(rowH * 0.3, 32 * scale)}px ${FONT}`;
+      ctx.fillText(k.trim(), area.x, y + rowH / 2, c0 - 20 * scale);
+      ctx.font = `500 ${Math.min(rowH * 0.3, 32 * scale)}px ${FONT}`;
+      ctx.fillText(a.trim(), area.x + c0 + 20 * scale, y + rowH / 2, cw - 30 * scale);
+      ctx.fillText(b.trim(), area.x + c0 + cw + 20 * scale, y + rowH / 2, cw - 30 * scale);
+    });
+    ctx.textBaseline = 'top';
+  },
+
+  testimonial(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.accent;
+    ctx.font = `900 ${64 * scale}px ${FONT}`;
+    ctx.textBaseline = 'top';
+    ctx.fillText('★★★★★', area.x, area.y);
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, `„${f.title}“`, { maxW: area.w, maxH: area.h - 260 * scale, weight: 700, start: 70 * scale, min: 28 * scale, lh: 1.25 });
+    drawLines(ctx, t.lines, area.x, area.y + 120 * scale, t.lh);
+    if (f.subtitle) {
+      ctx.fillStyle = theme.muted;
+      ctx.font = `600 ${34 * scale}px ${FONT}`;
+      ctx.fillText(`— ${f.subtitle}`, area.x, area.y + 150 * scale + t.height);
+    }
+  },
+
+  tip(ctx, { area, theme, f, scale }) {
+    let y = area.y;
+    if (f.subtitle) y += pill(ctx, f.subtitle, area.x, y, theme, scale) + 60 * scale;
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.y + area.h - y, weight: 800, start: 90 * scale, min: 30 * scale, lh: 1.15 });
+    drawLines(ctx, t.lines, area.x, y, t.lh);
+  },
+
+  mistakes(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.h * 0.25, start: 72 * scale, min: 32 * scale });
+    drawLines(ctx, t.lines, area.x, area.y, t.lh);
+    const list = items(f.items);
+    const top = area.y + t.height + 50 * scale;
+    const rowH = Math.min(130 * scale, (area.y + area.h - top) / Math.max(list.length, 1));
+    list.forEach((it, i) => {
+      const y = top + i * rowH;
+      const r = Math.min(30 * scale, rowH * 0.3);
+      ctx.fillStyle = theme.accent;
+      ctx.beginPath();
+      ctx.arc(area.x + r, y + rowH / 2, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = theme.bg;
+      ctx.lineWidth = 5 * scale;
+      const c = r * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(area.x + r - c, y + rowH / 2 - c);
+      ctx.lineTo(area.x + r + c, y + rowH / 2 + c);
+      ctx.moveTo(area.x + r + c, y + rowH / 2 - c);
+      ctx.lineTo(area.x + r - c, y + rowH / 2 + c);
+      ctx.stroke();
+      ctx.fillStyle = theme.fg;
+      ctx.font = `600 ${Math.min(rowH * 0.36, 44 * scale)}px ${FONT}`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(it, area.x + 2 * r + 28 * scale, y + rowH / 2, area.w - 2 * r - 28 * scale);
+      ctx.textBaseline = 'top';
+    });
+  },
+
+  announcement(ctx, { area, theme, f, scale }) {
+    let y = area.y;
+    y += pill(ctx, 'Ankündigung', area.x, y, theme, scale) + 50 * scale;
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.h * 0.5, weight: 900, start: 110 * scale, min: 40 * scale, lh: 1.08 });
+    drawLines(ctx, t.lines, area.x, y, t.lh);
+    y += t.height + 40 * scale;
+    if (f.subtitle) {
+      ctx.fillStyle = theme.accent;
+      const sub = fitText(ctx, f.subtitle, { maxW: area.w, maxH: 140 * scale, weight: 700, start: 42 * scale, min: 22 * scale, lh: 1.25 });
+      drawLines(ctx, sub.lines, area.x, y, sub.lh);
+    }
+    const cta = items(f.items)[0];
+    if (cta) {
+      ctx.fillStyle = theme.muted;
+      ctx.font = `600 ${32 * scale}px ${FONT}`;
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(cta, area.x, area.y + area.h);
+      ctx.textBaseline = 'top';
+    }
+  },
+
+  progress(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.h * 0.25, start: 68 * scale, min: 30 * scale });
+    drawLines(ctx, t.lines, area.x, area.y, t.lh);
+    const list = items(f.items).map((x) => x.split('|'));
+    const max = Math.max(1, ...list.map(([, v]) => Number(String(v).replace(',', '.')) || 0));
+    const top = area.y + t.height + 50 * scale;
+    const rowH = Math.min(150 * scale, (area.y + area.h - top) / Math.max(list.length, 1));
+    list.forEach(([label, v = '0'], i) => {
+      const y = top + i * rowH;
+      const val = Number(String(v).replace(',', '.')) || 0;
+      ctx.fillStyle = theme.fg;
+      ctx.font = `600 ${Math.min(rowH * 0.24, 34 * scale)}px ${FONT}`;
+      ctx.textBaseline = 'top';
+      ctx.fillText(label.trim(), area.x, y, area.w * 0.75);
+      ctx.textAlign = 'right';
+      ctx.font = `800 ${Math.min(rowH * 0.24, 34 * scale)}px ${FONT}`;
+      ctx.fillText(`${v.trim()} %`, area.x + area.w, y);
+      ctx.textAlign = 'left';
+      const by = y + rowH * 0.36;
+      const bh = rowH * 0.3;
+      ctx.fillStyle = 'rgba(127,127,127,.18)';
+      roundRect(ctx, area.x, by, area.w, bh, bh / 2);
+      ctx.fill();
+      ctx.fillStyle = theme.accent;
+      roundRect(ctx, area.x, by, Math.max(bh, (area.w * val) / Math.max(max, 100)), bh, bh / 2);
+      ctx.fill();
+    });
+  },
+
+  faq(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.accent;
+    ctx.font = `900 ${56 * scale}px ${FONT}`;
+    ctx.textBaseline = 'top';
+    ctx.fillText('F', area.x, area.y);
+    ctx.fillStyle = theme.fg;
+    const q = fitText(ctx, f.title, { maxW: area.w - 90 * scale, maxH: area.h * 0.35, weight: 800, start: 66 * scale, min: 28 * scale });
+    drawLines(ctx, q.lines, area.x + 90 * scale, area.y, q.lh);
+    const ay = area.y + Math.max(q.height, 70 * scale) + 60 * scale;
+    ctx.fillStyle = theme.accent;
+    ctx.font = `900 ${56 * scale}px ${FONT}`;
+    ctx.fillText('A', area.x, ay);
+    ctx.fillStyle = theme.fg;
+    const a = fitText(ctx, f.subtitle, { maxW: area.w - 90 * scale, maxH: area.y + area.h - ay, weight: 500, start: 46 * scale, min: 22 * scale, lh: 1.35 });
+    drawLines(ctx, a.lines, area.x + 90 * scale, ay + 6 * scale, a.lh);
+  },
+
+  lesson(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.accent;
+    const big = fitText(ctx, f.title, { maxW: area.w, maxH: area.h * 0.4, weight: 900, start: 220 * scale, min: 70 * scale, lh: 1.0 });
+    drawLines(ctx, big.lines, area.x, area.y, big.lh);
+    ctx.fillStyle = theme.fg;
+    const sub = fitText(ctx, f.subtitle, { maxW: area.w, maxH: area.h - big.height - 60 * scale, weight: 700, start: 60 * scale, min: 24 * scale, lh: 1.25 });
+    drawLines(ctx, sub.lines, area.x, area.y + big.height + 50 * scale, sub.lh);
+  },
+
+  ctaslide(ctx, { area, theme, f, scale }) {
+    ctx.fillStyle = theme.fg;
+    const t = fitText(ctx, f.title, { maxW: area.w, maxH: area.h * 0.35, weight: 900, start: 100 * scale, min: 36 * scale, lh: 1.08 });
+    drawLines(ctx, t.lines, area.x, area.y, t.lh);
+    const list = items(f.items);
+    let y = area.y + t.height + 70 * scale;
+    for (const it of list) {
+      const h = 96 * scale;
+      ctx.fillStyle = theme.accent;
+      roundRect(ctx, area.x, y, area.w, h, h / 2);
+      ctx.fill();
+      ctx.fillStyle = theme.bg;
+      ctx.font = `800 ${38 * scale}px ${FONT}`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`→  ${it}`, area.x + 40 * scale, y + h / 2, area.w - 80 * scale);
+      ctx.textBaseline = 'top';
+      y += h + 22 * scale;
+    }
   },
 };
 

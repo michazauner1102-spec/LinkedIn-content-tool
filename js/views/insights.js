@@ -3,7 +3,7 @@ import { BEST_TIMES, ALGO_INSIGHTS, HOOK_FORMULAS, POST_TYPES } from '../data.js
 import { checkPost, toDu, audienceLabel } from '../generator.js';
 import { pillarMix, balanceScore } from '../plan.js';
 import { aiEnabled, aiInsights } from '../ai.js';
-import { esc, typeIcon, busy, toast, copyText } from '../ui.js';
+import { esc, busy, toast, copyText, typeLabel } from '../ui.js';
 
 let aiResult = null;
 
@@ -56,17 +56,17 @@ export function render(el, { navigate }) {
           : '<p class="muted">Noch keine Pillars festgelegt. <a href="#/strategy">Strategie starten →</a></p>'}
         <h3 style="margin:20px 0 8px">Post-Typen</h3>
         ${typeCounts.length ? typeCounts.map((x) => `
-          <div class="bar-row"><span class="name">${x.t.icon} ${esc(x.t.label)}</span>
+          <div class="bar-row"><span class="name">${esc(x.t.label)}</span>
             <div class="bar"><i style="width:${(x.n / maxType) * 100}%"></i></div><span class="tiny">${x.n}</span></div>`).join('') : '<p class="muted small">Noch keine Daten.</p>'}
       </section>
 
       <section class="card">
         <div class="card-head"><h2>Was du als Nächstes tun solltest</h2></div>
-        ${gaps.length ? `<ul class="checks">${gaps.map((g) => `<li class="warn"><span class="st">!</span><div>${esc(g)}</div></li>`).join('')}</ul>` : '<p class="muted">Dein Mix ist ausgewogen – weiter so! 🎯</p>'}
+        ${gaps.length ? `<ul class="checks">${gaps.map((g) => `<li class="warn"><span class="st">!</span><div>${esc(g)}</div></li>`).join('')}</ul>` : '<p class="muted">Dein Mix ist ausgewogen.</p>'}
         ${weakList.length ? `<h3 style="margin:20px 0 8px">Häufigste Schwachstellen</h3>
           <ul class="checks">${weakList.map(([l, n]) => `<li class="bad"><span class="st">✕</span><div>${esc(l)}<small>in ${n} von ${written.length} Posts</small></div></li>`).join('')}</ul>` : ''}
         <div class="row" style="margin-top:20px">
-          <button class="btn btn-primary" id="ai-ins">✨ KI-Analyse meiner Strategie</button>
+          <button class="btn btn-primary" id="ai-ins">KI-Analyse meiner Strategie</button>
         </div>
         <div id="ai-out">${aiResult ? aiList(aiResult) : ''}</div>
       </section>
@@ -96,8 +96,8 @@ export function render(el, { navigate }) {
         ${HOOK_FORMULAS.map((f) => `<div class="formula">
           <b>${esc(f.name)}</b>
           <div class="tpl">${esc(fillHook(f.tpl))}</div>
-          <div class="row"><span class="tiny">${f.types.map(typeIcon).join(' ')}</span><span class="spacer"></span>
-            <button class="btn btn-sm btn-ghost" data-copy="${esc(fillHook(f.tpl))}">📋</button></div>
+          <div class="row"><span class="tiny">${f.types.map(typeLabel).join(' · ')}</span><span class="spacer"></span>
+            <button class="btn btn-sm btn-ghost" data-copy="${esc(fillHook(f.tpl))}">Kopieren</button></div>
         </div>`).join('')}
       </div>
     </section>`;

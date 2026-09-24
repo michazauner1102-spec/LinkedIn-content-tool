@@ -3,8 +3,9 @@ import { VIRAL_POSTS, ALGO_INSIGHTS, NICHES } from '../data.js';
 import { localIdeas, checkPost } from '../generator.js';
 import { aiEnabled, aiIdeas } from '../ai.js';
 import { weekPlan, pillarMix, balanceScore, createDraft } from '../plan.js';
-import { esc, typeLabel, typeIcon, initials, fmtNum, startOfWeek, addDays, DAY_NAMES, busy, toast } from '../ui.js';
+import { esc, typeLabel, fmtNum, startOfWeek, addDays, DAY_NAMES, busy, toast } from '../ui.js';
 import { uid } from '../store.js';
+import { getDaily, loadDaily } from '../daily.js';
 
 let dashIdeas = null;
 
@@ -21,14 +22,20 @@ export function render(el, { navigate }) {
   const plan = weekPlan(s);
   const done = plan.filter((p) => p.post).length;
   const nicheLabel = NICHES.find((n) => n.id === s.profile.niche)?.label;
-  const viral = VIRAL_POSTS.filter((p) => !s.profile.niche || p.niche === s.profile.niche);
-  const viralShow = (viral.length >= 3 ? viral : VIRAL_POSTS).slice().sort((a, b) => b.likes - a.likes).slice(0, 3);
+  const daily = getDaily();
+  if (daily === undefined) loadDaily().then(() => { if (el.isConnected) render(el, { navigate }); });
+  const byNiche = (arr) => arr.filter((p) => !s.profile.niche || p.niche === s.profile.niche);
+  const dailyPosts = daily?.posts || [];
+  const fromDaily = (byNiche(dailyPosts).length >= 3 ? byNiche(dailyPosts) : dailyPosts)
+    .slice().sort((a, b) => (b.foundAt || '').localeCompare(a.foundAt || '') || (b.likes || 0) - (a.likes || 0));
+  const examples = byNiche(VIRAL_POSTS).length >= 3 ? byNiche(VIRAL_POSTS) : VIRAL_POSTS;
+  const isLive = fromDaily.length >= 3;
+  const viralShow = (isLive ? fromDaily : examples.slice().sort((a, b) => b.likes - a.likes)).slice(0, 3);
   const insight = ALGO_INSIGHTS[new Date().getDate() % ALGO_INSIGHTS.length];
 
   el.innerHTML = `
     ${!s.onboarded ? `
       <div class="banner">
-        <span style="font-size:20px">⚠️</span>
         <div><div class="t">Schließe deine Content-Strategie ab</div>
         <div class="small muted">Lege Content-Pillars, Zielgruppe und Post-Typen fest – dann werden alle Vorschläge auf dich zugeschnitten.</div></div>
         <a class="btn" href="#/strategy">Jetzt starten</a>
@@ -46,7 +53,7 @@ export function render(el, { navigate }) {
         <section class="card">
           <div class="card-head">
             <h2>Post-Ideen für dich</h2>
-            <button class="btn btn-ghost" data-act="new-ideas">↻ Neue Ideen</button>
+            <button class="btn btn-ghost" data-act="new-ideas">Neue Ideen</button>
           </div>
           <div class="grid g3" id="dash-ideas">
             ${dashIdeas.map((i) => ideaCard(i, s)).join('')}
@@ -61,14 +68,13 @@ export function render(el, { navigate }) {
           <div class="grid g3">
             ${viralShow.map((p) => `
               <div class="creator">
-                <div class="who"><span class="avatar">${initials(p.author)}</span>
-                  <div><div class="name">${esc(p.author)}</div><div class="tiny">${esc(p.role)}</div></div></div>
+                <div class="who"><div><div class="name">${esc(p.author)}</div><div class="tiny">${esc(p.role)}</div></div></div>
                 <div class="excerpt">${esc(p.text)}</div>
-                <div class="metrics"><span>👍 ${fmtNum(p.likes)}</span><span>💬 ${fmtNum(p.comments)}</span><span>${typeIcon(p.type)} ${esc(typeLabel(p.type))}</span></div>
+                <div class="metrics">${p.likes != null ? `<span>${fmtNum(p.likes)} Reaktionen</span>` : ''}${p.comments != null ? `<span>${fmtNum(p.comments)} Kommentare</span>` : ''}</div>
                 <div><button class="link" data-act="use-viral" data-id="${p.id}">Als Vorlage nutzen →</button></div>
               </div>`).join('')}
           </div>
-          <p class="tiny" style="margin:12px 0 0">Beispiel-Posts mit fiktiven Autoren – sie zeigen bewährte Strukturen. Eigene Fundstücke sammelst du im Swipe-File.</p>
+          <p class="tiny" style="margin:12px 0 0">${isLive ? 'Echte Posts aus der täglichen Web-Recherche.' : 'Beispiel-Posts mit fiktiven Autoren – sie zeigen bewährte Strukturen. Echte Posts erscheinen, sobald die tägliche Recherche gelaufen ist.'}</p>
         </section>
       </div>
 
@@ -83,7 +89,7 @@ export function render(el, { navigate }) {
             ${plan.map((p, i) => `
               <div class="plan-day">
                 <div class="d ${p.post ? 'done' : ''}">${DAY_NAMES[(p.date.getDay() + 6) % 7]}<br>${p.date.getDate()}.</div>
-                <div class="info"><b>${esc(p.pillar.name)}</b><span class="small muted">${typeIcon(p.type)} ${esc(typeLabel(p.type))}</span></div>
+                <div class="info"><b>${esc(p.pillar.name)}</b><span class="small muted">${esc(typeLabel(p.type))}</span></div>
                 ${p.post
                   ? `<a class="btn btn-sm" href="#/write?draft=${p.post.id}">Öffnen</a>`
                   : `<button class="btn btn-sm" data-act="plan-write" data-i="${i}">Schreiben</button>`}
@@ -101,7 +107,7 @@ export function render(el, { navigate }) {
         </section>` : ''}
 
         <section class="card">
-          <div class="card-head"><h3>💡 Insight des Tages</h3><a class="icon-btn" href="#/insights">→</a></div>
+          <div class="card-head"><h3>Insight des Tages</h3><a class="icon-btn" href="#/insights">→</a></div>
           <b>${esc(insight.title)}</b>
           <p class="muted small" style="margin:6px 0 0">${esc(insight.text)}</p>
         </section>
@@ -164,7 +170,7 @@ function stat(label, value, sub) {
 function ideaCard(i, s) {
   const pillar = s.pillars.find((p) => p.id === i.pillarId);
   return `<div class="idea-card">
-    <div class="meta">${pillar ? `<span class="tag blue">${esc(pillar.name)}</span>` : ''}<span class="tag">${typeIcon(i.type)} ${esc(typeLabel(i.type))}</span></div>
+    <div class="meta">${pillar ? `<span class="tag blue">${esc(pillar.name)}</span>` : ''}<span class="tag">${esc(typeLabel(i.type))}</span></div>
     <div class="hook">${esc(i.hook)}</div>
     <div><button class="link" data-act="gen-post" data-id="${i.id}">Post generieren →</button></div>
   </div>`;

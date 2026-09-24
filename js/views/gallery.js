@@ -26,8 +26,8 @@ export function render(el, { navigate }) {
 
   el.innerHTML = `
     <div class="tabs">
-      <button class="${tab === 'templates' ? 'on' : ''}" data-tab="templates">🖼️ Grafik-Vorlagen</button>
-      <button class="${tab === 'carousel' ? 'on' : ''}" data-tab="carousel">🎠 Carousel-Builder (${s.carousel.slides.length})</button>
+      <button class="${tab === 'templates' ? 'on' : ''}" data-tab="templates">Grafik-Vorlagen</button>
+      <button class="${tab === 'carousel' ? 'on' : ''}" data-tab="carousel">Carousel-Builder (${s.carousel.slides.length})</button>
     </div>
     <div class="card" style="margin-bottom:18px">
       <div class="row" style="gap:18px">
@@ -37,7 +37,7 @@ export function render(el, { navigate }) {
           <select id="fmt">${FORMATS.map((f) => `<option value="${f.id}" ${g.format === f.id ? 'selected' : ''}>${f.name}</option>`).join('')}</select></label>
         <label class="field" style="min-width:240px">Untertitel im Footer
           <input type="text" id="handle" value="${esc(g.handle)}" placeholder="${esc([s.profile.role, s.profile.company].filter(Boolean).join(' · ') || 'z. B. Gründer · Firma')}"></label>
-        <label class="row small" style="gap:6px; margin-top:18px"><input type="checkbox" id="showAuthor" ${g.showAuthor ? 'checked' : ''}> Name & Avatar anzeigen</label>
+        <label class="row small" style="gap:6px; margin-top:18px"><input type="checkbox" id="showAuthor" ${g.showAuthor ? 'checked' : ''}> Name im Footer anzeigen</label>
       </div>
     </div>
     <div id="tab-body"></div>`;
@@ -72,16 +72,32 @@ function templates(body, s, rerender) {
   });
 }
 
+// Feldbeschriftungen je Vorlage: [Titel, Untertitel, Punkte, Punkte 2]
+const LABELS = {
+  mythfact: ['Mythos', 'Fakt'],
+  beforeafter: ['Vorher', 'Nachher'],
+  stat: ['Zahl', 'Erklärung'],
+  tweet: ['Post-Text', 'Name im Post'],
+  quote: ['Zitat', 'Quelle (optional)'],
+  dodont: ['Titel', '', 'Do’s', 'Don’ts'],
+  kpis: ['Titel', '', 'Kennzahlen – je Zeile: Wert|Beschriftung'],
+  compare: ['Titel', 'Spaltenköpfe: A|B', 'Zeilen – je Zeile: Kriterium|A|B'],
+  testimonial: ['Zitat des Kunden', 'Name / Firma'],
+  tip: ['Tipp', 'Label'],
+  announcement: ['Titel', 'Datum · Ort', 'Handlungsaufforderung'],
+  progress: ['Titel', '', 'Balken – je Zeile: Beschriftung|Prozent'],
+  faq: ['Frage', 'Antwort'],
+  lesson: ['Zeitraum / Zahl', 'Erkenntnis'],
+  ctaslide: ['Titel', '', 'Aufforderungen'],
+};
+
 function fieldInputs(tpl, fields) {
   const f = tpl.fields;
-  const parts = [`<label class="field">${tpl.id === 'mythfact' ? 'Mythos' : tpl.id === 'beforeafter' ? 'Vorher' : tpl.id === 'stat' ? 'Zahl' : 'Titel / Haupttext'}
-    <textarea data-f="title" rows="3">${esc(fields.title ?? '')}</textarea></label>`];
-  if ('subtitle' in f) parts.push(`<label class="field">${tpl.id === 'mythfact' ? 'Fakt' : tpl.id === 'beforeafter' ? 'Nachher' : tpl.id === 'tweet' ? 'Name im Post' : tpl.id === 'quote' ? 'Quelle (optional)' : 'Untertitel'}
-    <textarea data-f="subtitle" rows="2">${esc(fields.subtitle ?? '')}</textarea></label>`);
-  if ('items' in f) parts.push(`<label class="field">${tpl.id === 'dodont' ? 'Do’s' : 'Punkte'} <span class="hint">Ein Punkt pro Zeile</span>
-    <textarea data-f="items" rows="5">${esc(fields.items ?? '')}</textarea></label>`);
-  if ('items2' in f) parts.push(`<label class="field">Don’ts <span class="hint">Ein Punkt pro Zeile</span>
-    <textarea data-f="items2" rows="4">${esc(fields.items2 ?? '')}</textarea></label>`);
+  const [lt = 'Titel / Haupttext', ls = 'Untertitel', li = 'Punkte', li2 = 'Punkte 2'] = (LABELS[tpl.id] || []).map((x) => x || undefined);
+  const parts = [`<label class="field">${esc(lt)}<textarea data-f="title" rows="3">${esc(fields.title ?? '')}</textarea></label>`];
+  if ('subtitle' in f) parts.push(`<label class="field">${esc(ls)}<textarea data-f="subtitle" rows="2">${esc(fields.subtitle ?? '')}</textarea></label>`);
+  if ('items' in f) parts.push(`<label class="field">${esc(li)} <span class="hint">Ein Eintrag pro Zeile</span><textarea data-f="items" rows="5">${esc(fields.items ?? '')}</textarea></label>`);
+  if ('items2' in f) parts.push(`<label class="field">${esc(li2)} <span class="hint">Ein Eintrag pro Zeile</span><textarea data-f="items2" rows="4">${esc(fields.items2 ?? '')}</textarea></label>`);
   return parts.join('');
 }
 
@@ -91,7 +107,7 @@ function editModal(s, tpl, fields, rerender) {
     <div class="g-editor">
       <div class="stack">${fieldInputs(tpl, fields)}
         <div class="row">
-          <button class="btn btn-primary" id="dl">⬇ PNG herunterladen</button>
+          <button class="btn btn-primary" id="dl">PNG herunterladen</button>
           <button class="btn" id="to-car">+ Zum Carousel</button>
         </div>
         <p class="tiny">Tipp: Grafik + Post-Text zusammen posten. Das Bild stoppt den Scroll, der Text liefert den Kontext.</p>
@@ -116,7 +132,7 @@ const STARTER = [
   { tpl: 'mythfact', fields: { title: 'Mehr Hashtags = mehr Reichweite', subtitle: '3 passende Hashtags reichen völlig. Mehr wirkt wie Spam.' } },
   { tpl: 'list', fields: { title: 'Ein guter Hook …', items: 'hat maximal 14 Wörter\nweckt Neugier\nspricht ein Problem an\nsteht allein in der ersten Zeile' } },
   { tpl: 'stat', fields: { title: '60 Min.', subtitle: 'In der ersten Stunde entscheidet sich, wie weit ein Post ausgespielt wird.' } },
-  { tpl: 'question', fields: { title: 'Welchen Fehler machen Sie noch?', subtitle: 'Folgen für mehr Tipps · Speichern nicht vergessen' } },
+  { tpl: 'ctaslide', fields: { title: 'Welchen Fehler machen Sie noch?', items: 'Speichern für später\nTeilen mit Ihrem Team\nFolgen für mehr Tipps' } },
 ];
 
 function carousel(body, s, rerender) {
@@ -130,7 +146,7 @@ function carousel(body, s, rerender) {
       <div class="card-head"><h2>Carousel-Builder</h2>
         <div class="row">
           <label class="row small" style="gap:6px"><input type="checkbox" id="pn" ${s.carousel.pageNumbers ? 'checked' : ''}> Seitenzahlen</label>
-          ${slides.length ? '<button class="btn" id="pngs">⬇ Alle als PNG</button><button class="btn btn-primary" id="pdf">⬇ Als PDF exportieren</button>' : ''}
+          ${slides.length ? '<button class="btn" id="pngs">Alle als PNG</button><button class="btn btn-primary" id="pdf">Als PDF exportieren</button>' : ''}
         </div></div>
       <p class="muted small" style="margin-top:0">LinkedIn-Carousels werden als PDF-Dokument hochgeladen. Empfohlen: Hochformat 1080×1350, 5–10 Slides, Cover mit großem Versprechen, letzte Slide mit CTA.</p>
       <div class="slides">
@@ -138,7 +154,7 @@ function carousel(body, s, rerender) {
         <button class="slide-add" id="add-slide">+ Slide</button>
       </div>
       ${!slides.length ? `<div class="empty"><p>Noch keine Slides. Starte mit einer Vorlage oder füge Grafiken aus der Galerie hinzu.</p>
-        <button class="btn btn-primary" id="starter">🎠 Beispiel-Carousel laden</button></div>` : ''}
+        <button class="btn btn-primary" id="starter">Beispiel-Carousel laden</button></div>` : ''}
     </div>
     ${cur ? `
     <div class="card" style="margin-top:18px">

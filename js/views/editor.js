@@ -1,8 +1,9 @@
 import { store } from '../store.js';
-import { POST_TYPES, VIRAL_POSTS, HOOK_FORMULAS, POST_STRUCTURES } from '../data.js';
-import { checkPost, localDraft, skeletonFromViral, toUnicode, localIdeas } from '../generator.js';
+import { POST_TYPES, VIRAL_POSTS, HOOK_FORMULAS, POST_STRUCTURES, POST_TEMPLATES } from '../data.js';
+import { checkPost, localDraft, skeletonFromViral, toUnicode, localIdeas, toDu } from '../generator.js';
 import { aiEnabled, aiWritePost, aiRewrite, aiHooks, aiAdaptViral } from '../ai.js';
 import { createDraft } from '../plan.js';
+import { findDailyPost } from '../daily.js';
 import { esc, initials, copyText, toast, busy, toLocalInput, openModal, typeLabel } from '../ui.js';
 
 let device = 'mobile';
@@ -37,9 +38,10 @@ export function render(el, { navigate, params }) {
     }
   }
   if (params.get('viral')) {
-    const post = VIRAL_POSTS.find((p) => p.id === params.get('viral')) || s.swipe.find((p) => p.id === params.get('viral'));
+    const id = params.get('viral');
+    const post = VIRAL_POSTS.find((p) => p.id === id) || s.swipe.find((p) => p.id === id) || findDailyPost(id);
     if (post) {
-      const d = createDraft({ text: skeletonFromViral({ why: [], type: 'howto', ...post }, s), type: post.type || '', viralId: post.id });
+      const d = createDraft({ text: skeletonFromViral({ why: [], type: 'howto', ...post }, s), type: post.type || '', viralId: post.id, viralSource: { text: post.text, why: post.why || [], type: post.type || '' } });
       return navigate(`#/write?draft=${d.id}`, true);
     }
   }
@@ -51,7 +53,7 @@ export function render(el, { navigate, params }) {
     const d = createDraft({});
     return navigate(`#/write?draft=${d.id}`, true);
   }
-  const viral = draft.viralId ? VIRAL_POSTS.find((p) => p.id === draft.viralId) || s.swipe.find((p) => p.id === draft.viralId) : null;
+  const viral = draft.viralSource || (draft.viralId ? VIRAL_POSTS.find((p) => p.id === draft.viralId) || s.swipe.find((p) => p.id === draft.viralId) : null);
 
   el.innerHTML = `
     <div class="editor">
@@ -64,7 +66,7 @@ export function render(el, { navigate, params }) {
               </select></label>
             <label class="field">Post-Typ
               <select id="ptype"><option value="">– ohne –</option>
-                ${POST_TYPES.map((t) => `<option value="${t.id}" ${draft.type === t.id ? 'selected' : ''}>${t.icon} ${t.label}</option>`).join('')}
+                ${POST_TYPES.map((t) => `<option value="${t.id}" ${draft.type === t.id ? 'selected' : ''}>${t.label}</option>`).join('')}
               </select></label>
             <label class="field">Geplant für
               <input type="datetime-local" id="when" value="${toLocalInput(draft.scheduledAt)}"></label>
@@ -80,27 +82,28 @@ export function render(el, { navigate, params }) {
             <button class="btn btn-sm" data-ins="💡 ">💡</button>
             <button class="btn btn-sm" data-ins="♻️ ">♻️</button>
             <span class="spacer"></span>
-            <button class="btn btn-sm" id="hooks">🪝 Hook-Ideen</button>
+            <button class="btn btn-sm" id="tpls">Vorlage einfügen</button>
+            <button class="btn btn-sm" id="hooks">Hook-Ideen</button>
           </div>
           <textarea class="post" id="text" placeholder="Schreib deinen Post … Die erste Zeile ist der Hook.">${esc(draft.text)}</textarea>
           <div class="counter"><span id="count"></span><span>Automatisch gespeichert</span></div>
 
           <div class="row" style="margin-top:16px">
-            ${draft.ideaHook ? `<button class="btn btn-primary" id="ai-write">✨ Mit Claude ausformulieren</button>` : ''}
-            ${viral ? `<button class="btn btn-primary" id="ai-viral">✨ Für meine Nische umschreiben</button>` : ''}
+            ${draft.ideaHook ? `<button class="btn btn-primary" id="ai-write">Mit Claude ausformulieren</button>` : ''}
+            ${viral ? `<button class="btn btn-primary" id="ai-viral">Für meine Nische umschreiben</button>` : ''}
             <div style="position:relative">
-              <button class="btn" id="ai-menu">🤖 KI-Überarbeitung ▾</button>
+              <button class="btn" id="ai-menu">KI-Überarbeitung ▾</button>
               <div id="ai-list" class="card" style="display:none; position:absolute; z-index:10; top:44px; left:0; padding:6px; width:240px">
                 ${AI_ACTIONS.map(([l], i) => `<button class="btn btn-ghost" style="width:100%; justify-content:flex-start" data-ai="${i}">${l}</button>`).join('')}
               </div>
             </div>
             <span class="spacer"></span>
-            <button class="btn" id="copy">📋 Kopieren</button>
+            <button class="btn" id="copy">Kopieren</button>
             <button class="btn ${draft.status === 'veröffentlicht' ? '' : 'btn-primary'}" id="publish">${draft.status === 'veröffentlicht' ? '✓ Veröffentlicht' : 'Als veröffentlicht markieren'}</button>
           </div>
           <div class="row" style="margin-top:10px">
             <a class="btn btn-ghost btn-sm" href="#/write?new=1">+ Neuer Post</a>
-            <a class="btn btn-ghost btn-sm" href="#/gallery">🖼️ Grafik dazu erstellen</a>
+            <a class="btn btn-ghost btn-sm" href="#/gallery">Grafik dazu erstellen</a>
             <span class="spacer"></span>
             <button class="btn btn-ghost btn-sm btn-danger" id="del">Löschen</button>
           </div>
@@ -110,7 +113,7 @@ export function render(el, { navigate, params }) {
       <div class="stack">
         <div class="card">
           <div class="card-head"><h3>Vorschau</h3>
-            <div class="seg"><button data-dev="mobile" class="${device === 'mobile' ? 'on' : ''}">📱 Mobil</button><button data-dev="desktop" class="${device === 'desktop' ? 'on' : ''}">🖥️ Desktop</button></div></div>
+            <div class="seg"><button data-dev="mobile" class="${device === 'mobile' ? 'on' : ''}">Mobil</button><button data-dev="desktop" class="${device === 'desktop' ? 'on' : ''}">Desktop</button></div></div>
           <div id="preview"></div>
         </div>
         <div class="card">
@@ -201,7 +204,7 @@ export function render(el, { navigate, params }) {
     ta.disabled = true;
     try {
       setText(await fn());
-      toast('Fertig ✓');
+      toast('Fertig');
     } catch (err) {
       toast(`KI-Fehler: ${err.message}`);
     } finally {
@@ -233,6 +236,21 @@ export function render(el, { navigate, params }) {
     run(el.querySelector('#ai-menu'), `${label} …`, () => aiRewrite(s, ta.value, instruction));
   }));
 
+  el.querySelector('#tpls').addEventListener('click', () => {
+    const list = POST_TEMPLATES.filter((t) => !draft.type || t.type === draft.type);
+    const shown = list.length ? list : POST_TEMPLATES;
+    const m = openModal(`
+      <div class="modal-head"><h2>Post-Vorlage einfügen</h2><button class="icon-btn" data-close>✕</button></div>
+      <p class="muted small" style="margin-top:0">${draft.type && list.length ? `Passend zum Post-Typ „${esc(typeLabel(draft.type))}“. ` : ''}Ersetzt den aktuellen Text. [Platzhalter] danach ausfüllen.</p>
+      <div class="hook-list">${shown.map((t) => `<button class="hook-item" data-t="${t.id}"><b>${esc(t.name)}</b><br><span class="small muted">${esc(t.text.split('\n')[0])}</span></button>`).join('')}</div>`, { narrow: true });
+    m.el.querySelectorAll('[data-t]').forEach((b) => b.addEventListener('click', () => {
+      const t = POST_TEMPLATES.find((x) => x.id === b.dataset.t);
+      setText(s.voice.address === 'du' ? toDu(t.text) : t.text);
+      if (!draft.type) save({ type: t.type });
+      m.close();
+    }));
+  });
+
   el.querySelector('#hooks').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     let hooks;
@@ -246,7 +264,7 @@ export function render(el, { navigate, params }) {
       hooks = localIdeas(s, { pillarId: draft.pillarId, type, count: 6 }).map((i) => i.hook);
     }
     const m = openModal(`
-      <div class="modal-head"><h2>🪝 Hook-Ideen</h2><button class="icon-btn" data-close>✕</button></div>
+      <div class="modal-head"><h2>Hook-Ideen</h2><button class="icon-btn" data-close>✕</button></div>
       <p class="muted small" style="margin-top:0">Klicke auf einen Hook, um die erste Zeile zu ersetzen.</p>
       <div class="hook-list">${hooks.map((h, i) => `<button class="hook-item" data-h="${i}">${esc(h)}</button>`).join('')}</div>
       <h3 style="margin:20px 0 8px">Hook-Formeln</h3>
@@ -284,9 +302,9 @@ function renderPreview(box, text, s) {
   box.innerHTML = `
     <div class="li-preview ${device}">
       <div class="li-head"><span class="avatar">${initials(name)}</span>
-        <div><div class="li-name">${esc(name)} · 1.</div><div class="li-sub">${esc(sub)}</div><div class="li-sub">Jetzt · 🌐</div></div></div>
+        <div><div class="li-name">${esc(name)} · 1.</div><div class="li-sub">${esc(sub)}</div><div class="li-sub">Jetzt</div></div></div>
       <div class="li-text">${esc(shown) || '<span style="color:#999">Hier erscheint die Vorschau …</span>'}${truncated ? '<span class="more" data-more>… mehr</span>' : ''}${expanded && text.length > limit ? ' <span class="more" data-more>weniger</span>' : ''}</div>
-      <div class="li-actions"><span>👍 Gefällt mir</span><span>💬 Kommentieren</span><span>🔁 Reposten</span><span>➤ Senden</span></div>
+      <div class="li-actions"><span>Gefällt mir</span><span>Kommentieren</span><span>Reposten</span><span>Senden</span></div>
     </div>
     <p class="tiny" style="text-align:center; margin:10px 0 0">Alles vor „… mehr" muss neugierig machen – das sehen Leser im Feed.</p>`;
   box.querySelectorAll('[data-more]').forEach((m) => m.addEventListener('click', () => { expanded = !expanded; renderPreview(box, text, s); }));
@@ -295,7 +313,7 @@ function renderPreview(box, text, s) {
 function renderChecker(box, text, s) {
   const { score, checks } = checkPost(text, s);
   const color = 'var(--primary)';
-  const verdict = !text.trim() ? 'Noch leer' : score >= 75 ? 'Bereit zum Posten 🚀' : score >= 50 ? 'Fast da – ein paar Feinschliffe' : 'Noch Luft nach oben';
+  const verdict = !text.trim() ? 'Noch leer' : score >= 75 ? 'Bereit zum Posten' : score >= 50 ? 'Fast da – ein paar Feinschliffe' : 'Noch Luft nach oben';
   box.innerHTML = `
     <div class="score"><div class="ring" style="--v:${score}; --c:${color}"><span>${score}</span></div>
       <div><b>${verdict}</b><div class="small muted">Bewertet Hook, Lesbarkeit, Länge, CTA & Reichweiten-Faktoren.</div></div></div>

@@ -244,23 +244,54 @@ export const GRAPHIC_TEMPLATES = [
   { id: 'dodont', name: 'Do / Don’t', desc: 'Zwei Spalten: richtig vs. falsch.', fields: { title: 'Kaltakquise per E-Mail', items: 'Personalisierte erste Zeile\nKonkreter Nutzen\nEine klare Frage', items2: 'Firmenvorstellung zuerst\n3 Links im Text\n„Hätten Sie kurz Zeit?"' } },
   { id: 'cover', name: 'Carousel-Cover', desc: 'Titelseite für ein PDF-Carousel.', fields: { title: '7 Workflows, die jedes Maklerbüro braucht', subtitle: 'Wischen →' } },
   { id: 'timeline', name: 'Prozess / Timeline', desc: 'Ablauf in Etappen.', fields: { title: 'Vom Lead zum Mandat', items: 'Anfrage (Tag 0)\nAntwort in 5 Min.\nErstgespräch (Tag 2)\nBewertung vor Ort (Tag 5)\nMandat (Tag 10)' } },
-  { id: 'question', name: 'Frage an die Community', desc: 'Große Frage – fördert Kommentare.', fields: { title: 'Welche Aufgabe würden Sie sofort automatisieren?', subtitle: 'Antwort in die Kommentare 👇' } },
+  { id: 'question', name: 'Frage an die Community', desc: 'Große Frage – fördert Kommentare.', fields: { title: 'Welche Aufgabe würden Sie sofort automatisieren?', subtitle: 'Antwort in die Kommentare' } },
+  { id: 'numbered', name: 'Top 3', desc: 'Drei Punkte mit großen Nummern.', fields: { title: 'Die 3 größten Zeitfresser im Maklerbüro', items: 'Exposés von Hand schreiben\nAnfragen einzeln beantworten\nTermine hin- und herschieben' } },
+  { id: 'kpis', name: 'Kennzahlen-Grid', desc: 'Drei Zahlen auf einen Blick – ideal für Ergebnisse.', fields: { title: 'Ergebnis nach 90 Tagen', items: '+38 %|Anfragen\n4,9|Google-Sterne\n10 Std.|pro Woche gespart' } },
+  { id: 'compare', name: 'Vergleich A vs. B', desc: 'Zwei Optionen gegenübergestellt.', fields: { title: 'Portal vs. eigene Sichtbarkeit', subtitle: 'Portal|Eigene Marke', items: 'Kosten pro Lead|hoch|sinkt mit der Zeit\nAbhängigkeit|groß|gering\nVertrauen|austauschbar|persönlich' } },
+  { id: 'testimonial', name: 'Kundenstimme', desc: 'Zitat eines Kunden mit Sternen.', fields: { title: 'Wir sparen jede Woche einen ganzen Arbeitstag – und die Kunden merken es an den schnellen Antworten.', subtitle: 'Kundin, Maklerbüro in Linz' } },
+  { id: 'tip', name: 'Tipp des Tages', desc: 'Ein konkreter Tipp mit Label.', fields: { title: 'Antworten Sie auf jede Anfrage innerhalb von 5 Minuten. Die Abschlussquote steigt deutlich.', subtitle: 'Tipp des Tages' } },
+  { id: 'mistakes', name: 'Fehler-Liste', desc: 'Häufige Fehler, die Ihre Zielgruppe macht.', fields: { title: '4 Fehler bei Eigentümer-Akquise', items: 'Nur auf Portale setzen\nBewertungen nicht nachfragen\nKein Follow-up nach 48 Std.\nPreis vor Nutzen erklären' } },
+  { id: 'announcement', name: 'Ankündigung / Event', desc: 'Webinar, Workshop oder Launch.', fields: { title: 'Live-Webinar: KI im Maklerbüro', subtitle: 'Donnerstag, 18:00 Uhr · online · kostenlos', items: 'Anmeldung: Link im Kommentar' } },
+  { id: 'progress', name: 'Prozent-Balken', desc: 'Anteile oder Umfrageergebnisse als Balken.', fields: { title: 'Wo verlieren Makler die meiste Zeit?', items: 'Admin & Dokumente|42\nAnfragen beantworten|27\nTerminabstimmung|18\nSonstiges|13' } },
+  { id: 'faq', name: 'Frage & Antwort', desc: 'Eine häufige Kundenfrage, klar beantwortet.', fields: { title: 'Ist KI im Maklerbüro DSGVO-konform?', subtitle: 'Ja – wenn Daten in der EU verarbeitet werden, ein Auftragsverarbeitungsvertrag vorliegt und keine sensiblen Daten ohne Einwilligung genutzt werden.' } },
+  { id: 'lesson', name: 'Learning-Karte', desc: 'Zeitraum + wichtigste Erkenntnis.', fields: { title: '5 Jahre', subtitle: 'Die wichtigste Lektion: Schnelligkeit schlägt Perfektion. Wer zuerst antwortet, bekommt den Termin.' } },
+  { id: 'ctaslide', name: 'Carousel-Endslide', desc: 'Letzte Slide mit Handlungsaufforderung.', fields: { title: 'Hat Ihnen das geholfen?', items: 'Speichern für später\nTeilen mit Ihrem Team\nFolgen für mehr' } },
 ];
 
 export const THEMES = [
-  { id: 'white', name: 'Weiß', bg: '#ffffff', bg2: '#f4f4f4', fg: '#0a0a0a', accent: '#0a0a0a', muted: 'rgba(10,10,10,.6)' },
-  { id: 'grey', name: 'Hellgrau', bg: '#ededed', bg2: '#e0e0e0', fg: '#0a0a0a', accent: '#0a0a0a', muted: 'rgba(10,10,10,.6)' },
-  { id: 'black', name: 'Schwarz', bg: '#0a0a0a', bg2: '#1c1c1c', fg: '#ffffff', accent: '#ffffff', muted: 'rgba(255,255,255,.7)' },
   { id: 'blue', name: 'Blau', bg: '#1d4ed8', bg2: '#3b82f6', fg: '#ffffff', accent: '#fde047', muted: 'rgba(255,255,255,.75)' },
   { id: 'night', name: 'Nacht', bg: '#0f172a', bg2: '#1e293b', fg: '#f8fafc', accent: '#38bdf8', muted: 'rgba(248,250,252,.7)' },
   { id: 'paper', name: 'Papier', bg: '#faf7f2', bg2: '#f1ebe0', fg: '#1c1917', accent: '#c2410c', muted: 'rgba(28,25,23,.65)' },
   { id: 'mint', name: 'Mint', bg: '#ecfdf5', bg2: '#d1fae5', fg: '#064e3b', accent: '#059669', muted: 'rgba(6,78,59,.7)' },
   { id: 'coral', name: 'Koralle', bg: '#fff1ee', bg2: '#ffe0d8', fg: '#431407', accent: '#ea580c', muted: 'rgba(67,20,7,.7)' },
   { id: 'violet', name: 'Violett', bg: '#4c1d95', bg2: '#7c3aed', fg: '#ffffff', accent: '#fbcfe8', muted: 'rgba(255,255,255,.75)' },
+  { id: 'white', name: 'Weiß', bg: '#ffffff', bg2: '#f4f4f4', fg: '#0a0a0a', accent: '#0a0a0a', muted: 'rgba(10,10,10,.6)' },
+  { id: 'grey', name: 'Hellgrau', bg: '#ededed', bg2: '#e0e0e0', fg: '#0a0a0a', accent: '#0a0a0a', muted: 'rgba(10,10,10,.6)' },
+  { id: 'black', name: 'Schwarz', bg: '#0a0a0a', bg2: '#1c1c1c', fg: '#ffffff', accent: '#ffffff', muted: 'rgba(255,255,255,.7)' },
 ];
 
 export const FORMATS = [
   { id: 'square', name: 'Quadrat 1080×1080', w: 1080, h: 1080 },
   { id: 'portrait', name: 'Hochformat 1080×1350', w: 1080, h: 1350 },
   { id: 'landscape', name: 'Querformat 1200×627', w: 1200, h: 627 },
+];
+
+// Post-Textvorlagen zum Ausfüllen. [Eckige Klammern] = Platzhalter.
+export const POST_TEMPLATES = [
+  { id: 't1', name: 'Fehler-Geständnis', type: 'story', text: 'Ich habe [Zeitraum] lang den gleichen Fehler gemacht.\n\n[Was genau war der Fehler – in einem Satz]\n\nBis zu diesem Moment:\n[Konkrete Szene: wann, wo, wer, was wurde gesagt]\n\nDas hat mir die Augen geöffnet.\n\nSeitdem mache ich es so:\n→ [Neue Regel 1]\n→ [Neue Regel 2]\n→ [Neue Regel 3]\n\nDas Ergebnis: [messbare Veränderung]\n\nWelchen Fehler hätten Sie gern früher erkannt?' },
+  { id: 't2', name: 'Schritt-für-Schritt-Anleitung', type: 'howto', text: 'So lösen Sie [Problem der Zielgruppe] in [Anzahl] Schritten:\n\nSchritt 1: [Was tun] – [warum]\n\nSchritt 2: [Was tun] – [warum]\n\nSchritt 3: [Was tun] – [warum]\n\nDer häufigste Fehler dabei: [Fehler]\n\nIch habe das mit [Kunde/Projekt] umgesetzt: [Ergebnis in Zahlen].\n\nSpeichern Sie sich den Post für später.' },
+  { id: 't3', name: 'Listicle: X Dinge', type: 'listicle', text: '[Zahl] Dinge über [Thema], die [Zielgruppe] zu spät lernen:\n\n1. [Punkt]\n2. [Punkt]\n3. [Punkt]\n4. [Punkt]\n5. [Punkt]\n\nNummer [X] hat mich am meisten überrascht.\n\nWelcher Punkt fehlt?' },
+  { id: 't4', name: 'Unpopuläre Meinung', type: 'hottake', text: 'Unpopuläre Meinung:\n\n[Ihre These in einem Satz]\n\nDie meisten glauben: [verbreitete Annahme]\n\nIch sehe das anders, weil:\n→ [Argument 1]\n→ [Argument 2]\n→ [Argument 3]\n\nFair ist aber auch: [Einschränkung]\n\nSehen Sie das anders?' },
+  { id: 't5', name: 'Case Study mit Zahlen', type: 'casestudy', text: 'Von [Ausgangswert] auf [Ergebniswert] in [Zeitraum].\n\nSo lief das Projekt mit [Kundentyp, anonymisiert]:\n\nAusgangslage:\n[2–3 Sätze zum Problem]\n\nWas wir gemacht haben:\n→ [Maßnahme 1]\n→ [Maßnahme 2]\n→ [Maßnahme 3]\n\nErgebnis nach [Zeitraum]:\n✅ [Kennzahl 1]\n✅ [Kennzahl 2]\n✅ [Kennzahl 3]\n\nWas Sie davon übernehmen können: [1 Satz]\n\nFragen dazu? Schreiben Sie mir.' },
+  { id: 't6', name: 'Mythos vs. Fakt', type: 'mythfact', text: '„[Mythos als Zitat]"\n\nDas höre ich jede Woche. Stimmt nur nicht.\n\nMythos: [Mythos 1]\nFakt: [Fakt 1]\n\nMythos: [Mythos 2]\nFakt: [Fakt 2]\n\nMythos: [Mythos 3]\nFakt: [Fakt 3]\n\n[Fazit in einem Satz]\n\nWelchen Mythos hören Sie am häufigsten?' },
+  { id: 't7', name: 'Lessons Learned', type: 'lessons', text: '[Zeitraum] als [Rolle]. [Zahl] Dinge, die ich heute anders machen würde:\n\n1. [Lesson]\n2. [Lesson]\n3. [Lesson]\n4. [Lesson]\n5. [Lesson]\n\nNummer [X] hat mich am meisten gekostet.\n\nWelche würden Sie unterschreiben?' },
+  { id: 't8', name: 'Hinter den Kulissen', type: 'behindscenes', text: 'So sieht [Ihr Job / Ihr Prozess] wirklich aus (kein Hochglanz):\n\n[Uhrzeit] – [Moment 1]\n[Uhrzeit] – [Moment 2]\n[Uhrzeit] – [Moment 3]\n\nWarum ich das trotzdem liebe:\n[1–2 Sätze]\n\nWas ist der unglamouröseste Teil Ihres Jobs?' },
+  { id: 't9', name: 'Vorher / Nachher', type: 'beforeafter', text: 'Vorher: [Situation vorher]\nNachher: [Situation nachher]\n\nGleiche [Firma / Person / Ressourcen].\n\nDer Unterschied:\n→ [Veränderung 1]\n→ [Veränderung 2]\n→ [Veränderung 3]\n\nDer erste Schritt war: [kleinster Einstieg]\n\nWo stehen Sie gerade – vorher oder nachher?' },
+  { id: 't10', name: 'Umfrage an die Community', type: 'poll', text: 'Ehrliche Frage an alle [Zielgruppe]:\n\n[Die Frage]\n\nA) [Option]\nB) [Option]\nC) [Option]\nD) [Option]\n\nIch sammle die Antworten und teile die Auswertung nächste Woche.' },
+  { id: 't11', name: 'Eigenes Framework', type: 'framework', text: 'Das [Name]-Prinzip, mit dem ich [Ergebnis] erreiche:\n\n[Buchstabe] – [Baustein 1]: [Erklärung]\n[Buchstabe] – [Baustein 2]: [Erklärung]\n[Buchstabe] – [Baustein 3]: [Erklärung]\n\nDauert [Zeit]. Spart [Nutzen].\n\nSpeichern und beim nächsten [Anlass] ausprobieren.' },
+  { id: 't12', name: 'Kundenfrage beantworten', type: 'howto', text: '„[Häufige Kundenfrage]?"\n\nDiese Frage bekomme ich [wie oft].\n\nDie kurze Antwort: [1 Satz]\n\nDie lange Antwort:\n→ [Aspekt 1]\n→ [Aspekt 2]\n→ [Aspekt 3]\n\nWelche Frage sollte ich als Nächstes beantworten?' },
+  { id: 't13', name: 'Meilenstein feiern', type: 'story', text: '[Meilenstein] – und ich hätte nicht gedacht, dass ich das schreibe.\n\nVor [Zeitraum] war die Lage: [Ausgangssituation]\n\nWas den Unterschied gemacht hat:\n1. [Faktor]\n2. [Faktor]\n3. [Faktor]\n\nDanke an [Menschen / Kunden / Team].\n\nWas feiern Sie gerade?' },
+  { id: 't14', name: 'Tool / Workflow teilen', type: 'howto', text: 'Dieser Workflow spart mir [Zeit] pro Woche:\n\n[Aufgabe] → [Tool/Schritt] → [Ergebnis]\n\nSo richten Sie ihn ein:\n1. [Schritt]\n2. [Schritt]\n3. [Schritt]\n\nWichtig: [Hinweis, z. B. Datenschutz]\n\nKommentieren Sie „[Wort]" und ich schicke Ihnen die Vorlage.' },
+  { id: 't15', name: 'Trend einordnen', type: 'hottake', text: 'Alle reden über [Trend]. Kaum jemand über [unterschätzten Aspekt].\n\nWas ich in der Praxis sehe:\n→ [Beobachtung 1]\n→ [Beobachtung 2]\n→ [Beobachtung 3]\n\nMeine Einschätzung für [Zielgruppe]: [klare Empfehlung]\n\nWie gehen Sie damit um?' },
+  { id: 't16', name: 'Carousel-Begleittext', type: 'carousel', text: '[Versprechen des Carousels] (Carousel)\n\n[1 Satz, warum das wichtig ist]\n\nIm Dokument:\n→ [Inhalt 1]\n→ [Inhalt 2]\n→ [Inhalt 3]\n\nSlide [X] ist mein Favorit.\n\nSpeichern Sie das Dokument für später.' },
 ];

@@ -31,7 +31,6 @@ export function openModal(html, { narrow = false, onClose } = {}) {
 }
 
 export const typeLabel = (id) => POST_TYPES.find((t) => t.id === id)?.label || id || '–';
-export const typeIcon = (id) => POST_TYPES.find((t) => t.id === id)?.icon || '📝';
 
 export const initials = (name) =>
   (name || '?')

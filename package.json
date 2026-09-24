@@ -1,0 +1,8 @@
+{
+  "name": "postlab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate:viral": "node scripts/validate-viral.mjs"
+  }
+}

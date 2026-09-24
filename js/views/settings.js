@@ -27,8 +27,8 @@ export function render(el, { navigate }) {
         <h2>Daten</h2>
         <p class="muted small">Alle Daten (Strategie, Entwürfe, Swipe-File) bleiben lokal in deinem Browser. Exportiere regelmäßig ein Backup.</p>
         <div class="row" style="margin-top:12px">
-          <button class="btn" id="export">⬇ Backup exportieren</button>
-          <label class="btn">⬆ Backup importieren<input type="file" id="import" accept="application/json" hidden></label>
+          <button class="btn" id="export">Backup exportieren</button>
+          <label class="btn">Backup importieren<input type="file" id="import" accept="application/json" hidden></label>
           <span class="spacer"></span>
           <button class="btn btn-danger" id="reset">Alles zurücksetzen</button>
         </div>
@@ -59,7 +59,7 @@ export function render(el, { navigate }) {
     busy(btn, true, 'Teste …');
     try {
       await aiRewrite(store.get(), 'Hallo LinkedIn', 'Antworte nur mit dem Wort OK.');
-      toast('✓ Verbindung funktioniert');
+      toast('Verbindung funktioniert');
     } catch (err) {
       toast(`Fehler: ${err.message}`);
     }
