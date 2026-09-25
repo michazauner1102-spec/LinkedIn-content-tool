@@ -1,10 +1,11 @@
 import { store } from '../store.js';
 import { POST_TYPES, VIRAL_POSTS, HOOK_FORMULAS, POST_STRUCTURES, POST_TEMPLATES } from '../data.js';
 import { checkPost, localDraft, skeletonFromViral, toUnicode, localIdeas, toDu } from '../generator.js';
-import { aiEnabled, aiWritePost, aiRewrite, aiHooks, aiAdaptViral } from '../ai.js';
+import { aiEnabled, writePrompt, rewritePrompt, hooksPrompt, adaptPrompt } from '../ai.js';
+import { assist } from '../assist.js';
 import { createDraft } from '../plan.js';
 import { findDailyPost } from '../daily.js';
-import { esc, copyText, toast, busy, toLocalInput, openModal, typeLabel } from '../ui.js';
+import { esc, copyText, toast, toLocalInput, openModal, typeLabel } from '../ui.js';
 
 let device = 'mobile';
 // Merkt sich, ob ein frisch aus einer Idee erstellter Entwurf automatisch per KI ausformuliert werden soll.
@@ -85,7 +86,7 @@ export function render(el, { navigate, params }) {
           <div class="counter"><span id="count"></span><span>Automatisch gespeichert</span></div>
 
           <div class="row" style="margin-top:16px">
-            ${draft.ideaHook ? `<button class="btn btn-primary" id="ai-write">Mit Claude ausformulieren</button>` : ''}
+            <button class="btn btn-primary" id="ai-write">${draft.ideaHook ? 'Mit Claude ausformulieren' : 'Mit Claude schreiben'}</button>
             ${viral ? `<button class="btn btn-primary" id="ai-viral">Für meine Nische umschreiben</button>` : ''}
             <div style="position:relative">
               <button class="btn" id="ai-menu">KI-Überarbeitung ▾</button>
@@ -187,41 +188,35 @@ export function render(el, { navigate, params }) {
     navigate('#/calendar');
   });
 
-  // KI
-  const needKey = () => {
-    if (aiEnabled(s)) return false;
-    toast('Bitte zuerst einen API-Schlüssel in den Einstellungen hinterlegen.');
-    navigate('#/settings');
-    return true;
-  };
-  const run = async (btn, label, fn) => {
-    if (needKey()) return;
-    busy(btn, true, label);
-    ta.disabled = true;
-    try {
-      setText(await fn());
-      toast('Fertig');
-    } catch (err) {
-      toast(`KI-Fehler: ${err.message}`);
-    } finally {
-      ta.disabled = false;
-      busy(btn, false);
-    }
-  };
+  // KI: mit API-Schlüssel direkt, sonst als Prompt zum Kopieren in Claude
+  const aiRun = (btn, label, prompt, title = label.replace(' …', '')) =>
+    assist(s, prompt, {
+      title,
+      btn,
+      busyLabel: label,
+      onResult: (text) => {
+        setText(text);
+        toast('Fertig');
+      },
+    });
 
   const writeBtn = el.querySelector('#ai-write');
-  const doWrite = () => run(writeBtn, 'Claude schreibt …', () => aiWritePost(s, {
-    hook: draft.ideaHook, angle: draft.ideaAngle, type: draft.type,
-    pillarName: s.pillars.find((p) => p.id === draft.pillarId)?.name,
-  }));
-  writeBtn?.addEventListener('click', doWrite);
-  if (writeBtn && session.get() === draft.id) {
+  const doWrite = () => {
+    const firstLine = ta.value.split('\n').find((l) => l.trim() && !/^\[.*\]$/.test(l.trim()));
+    const pillarName = s.pillars.find((p) => p.id === draft.pillarId)?.name;
+    aiRun(writeBtn, 'Claude schreibt …', writePrompt(s, {
+      hook: draft.ideaHook || firstLine || `Ein starker Post zum Thema „${pillarName || 'meine Expertise'}“`,
+      angle: draft.ideaAngle, type: draft.type, pillarName,
+    }), 'Post mit Claude schreiben');
+  };
+  writeBtn.addEventListener('click', doWrite);
+  if (aiEnabled(s) && session.get() === draft.id) {
     session.set(null);
     doWrite();
   }
 
   const viralBtn = el.querySelector('#ai-viral');
-  viralBtn?.addEventListener('click', () => run(viralBtn, 'Claude schreibt um …', () => aiAdaptViral(s, { why: [], ...viral })));
+  viralBtn?.addEventListener('click', () => aiRun(viralBtn, 'Für meine Nische umschreiben …', adaptPrompt(s, { why: [], ...viral })));
 
   const menu = el.querySelector('#ai-list');
   el.querySelector('#ai-menu').addEventListener('click', () => { menu.style.display = menu.style.display === 'none' ? 'block' : 'none'; });
@@ -229,7 +224,7 @@ export function render(el, { navigate, params }) {
     menu.style.display = 'none';
     if (!ta.value.trim()) return toast('Erst etwas schreiben');
     const [label, instruction] = AI_ACTIONS[Number(b.dataset.ai)];
-    run(el.querySelector('#ai-menu'), `${label} …`, () => aiRewrite(s, ta.value, instruction));
+    aiRun(el.querySelector('#ai-menu'), `${label} …`, rewritePrompt(s, ta.value, instruction));
   }));
 
   el.querySelector('#tpls').addEventListener('click', () => {
@@ -247,22 +242,12 @@ export function render(el, { navigate, params }) {
     }));
   });
 
-  el.querySelector('#hooks').addEventListener('click', async (e) => {
-    const btn = e.currentTarget;
-    let hooks;
-    if (aiEnabled(s) && ta.value.trim().length > 40) {
-      busy(btn, true, 'Hooks …');
-      try { hooks = await aiHooks(s, ta.value); } catch (err) { toast(`KI-Fehler: ${err.message}`); }
-      busy(btn, false);
-    }
-    if (!hooks) {
-      const type = draft.type;
-      hooks = localIdeas(s, { pillarId: draft.pillarId, type, count: 6 }).map((i) => i.hook);
-    }
+  const showHooks = (hooks, fromClaude) => {
     const m = openModal(`
       <div class="modal-head"><h2>Hook-Ideen</h2><button class="icon-btn" data-close>✕</button></div>
       <p class="muted small" style="margin-top:0">Klicke auf einen Hook, um die erste Zeile zu ersetzen.</p>
       <div class="hook-list">${hooks.map((h, i) => `<button class="hook-item" data-h="${i}">${esc(h)}</button>`).join('')}</div>
+      ${!fromClaude ? '<div class="row" style="margin-top:14px"><button class="btn" id="hooks-claude">Hooks mit Claude zu meinem Text</button></div>' : ''}
       <h3 style="margin:20px 0 8px">Hook-Formeln</h3>
       <div class="chips">${HOOK_FORMULAS.map((f) => `<span class="tag" title="${esc(f.tpl)}">${esc(f.name)}</span>`).join('')}</div>`, { narrow: true });
     m.el.querySelectorAll('[data-h]').forEach((b) => b.addEventListener('click', () => {
@@ -273,6 +258,20 @@ export function render(el, { navigate, params }) {
       setText(lines.join('\n'));
       m.close();
     }));
+    m.el.querySelector('#hooks-claude')?.addEventListener('click', () => {
+      if (ta.value.trim().length < 40) return toast('Schreib zuerst ein paar Sätze – dann passen die Hooks zum Inhalt.');
+      m.close();
+      assist(s, hooksPrompt(s, ta.value), {
+        title: 'Hook-Ideen von Claude',
+        btn: el.querySelector('#hooks'),
+        busyLabel: 'Hooks …',
+        onResult: (list) => showHooks(list.map(String), true),
+      });
+    });
+  };
+
+  el.querySelector('#hooks').addEventListener('click', () => {
+    showHooks(localIdeas(s, { pillarId: draft.pillarId, type: draft.type, count: 6 }).map((i) => i.hook), false);
   });
 }
 

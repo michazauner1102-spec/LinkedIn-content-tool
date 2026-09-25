@@ -35,7 +35,7 @@ Unter **Einstellungen** einen Anthropic-API-Schlüssel hinterlegen. Dann schreib
 - Bei Opus 5 ist `fallbacks: "default"` aktiv: lehnt ein Sicherheitsklassifikator eine Anfrage ab, übernimmt serverseitig automatisch ein Ersatzmodell.
 - Der Aufruf erfolgt über das offizielle Anthropic-JS-SDK direkt aus dem Browser (`dangerouslyAllowBrowser`). Der Schlüssel liegt nur im `localStorage` – nutze die App auf deinem eigenen Gerät und setze ein Ausgabenlimit in der Anthropic-Konsole. Für einen Mehrbenutzer-Betrieb sollten die Aufrufe über ein eigenes Backend laufen.
 
-Ohne Schlüssel funktioniert alles andere vollständig (Ideen aus Vorlagen, Checker, Galerie, Kalender).
+**Ohne Schlüssel (Prompt-Modus):** Jede KI-Funktion (Post schreiben, umschreiben, Hooks, Ideen, Strategie-Analyse) zeigt den fertigen Prompt mit deinem Strategie-Kontext. Kopieren, in Claude einfügen und die Antwort zurück in die App übernehmen. In der Grafik-Galerie und im Carousel-Builder erzeugt „Prompt für Claude Design“ ein komplettes Design-Briefing (Format, Farben, Texte, Layout).
 
 ## Tägliche virale Posts
 

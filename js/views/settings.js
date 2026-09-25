@@ -8,7 +8,7 @@ export function render(el, { navigate }) {
     <div class="stack" style="max-width:820px">
       <section class="card">
         <h2>KI-Schreibassistent (Claude)</h2>
-        <p class="muted small">Optional. Ohne Schlüssel funktionieren Strategie, Vorlagen-Ideen, Editor, Checker, Galerie und Kalender vollständig. Mit Schlüssel schreibt Claude komplette Posts, Ideen, Hooks und Analysen in deiner Tonalität.</p>
+        <p class="muted small">Optional. <b>Ohne Schlüssel</b> zeigt dir die App bei jeder KI-Funktion den fertigen Prompt – kopieren, in Claude einfügen, Antwort zurück in die App übernehmen. <b>Mit Schlüssel</b> schreibt Claude Posts, Ideen, Hooks und Analysen direkt in der App.</p>
         <div class="grid g2" style="margin-top:14px">
           <label class="field">Anthropic API-Schlüssel <span class="hint">Wird nur in diesem Browser gespeichert und direkt an api.anthropic.com gesendet.</span>
             <input type="password" id="key" value="${esc(s.settings.apiKey)}" placeholder="sk-ant-…" autocomplete="off"></label>

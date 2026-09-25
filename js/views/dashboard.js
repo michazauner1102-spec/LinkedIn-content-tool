@@ -114,7 +114,7 @@ export function render(el, { navigate }) {
 
         ${!aiEnabled(s) ? `
         <div class="banner info" style="margin:0">
-          <div><div class="t">KI-Schreibassistent aktivieren</div><div class="small muted">Mit einem Anthropic-API-Schlüssel schreibt Claude komplette Posts in deiner Tonalität.</div></div>
+          <div><div class="t">Claude ohne API-Schlüssel nutzen</div><div class="small muted">Bei jeder KI-Funktion bekommst du den fertigen Prompt zum Kopieren in Claude. Mit Schlüssel läuft alles direkt in der App.</div></div>
           <a class="btn btn-sm" href="#/settings">Einrichten</a>
         </div>` : ''}
       </aside>

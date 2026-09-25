@@ -100,81 +100,111 @@ async function ask(s, system, user) {
     .trim();
 }
 
-function parseJSONArray(text) {
+export function parseJSONArray(text) {
   const start = text.indexOf('[');
   const end = text.lastIndexOf(']');
-  if (start === -1 || end === -1) throw new Error('Antwort konnte nicht gelesen werden.');
+  if (start === -1 || end === -1) throw new Error('Antwort konnte nicht gelesen werden – es fehlt die JSON-Liste.');
   return JSON.parse(text.slice(start, end + 1));
 }
 
-export async function aiIdeas(s, { pillar, type, count = 6 }) {
-  const system = `Du bist ein erfahrener LinkedIn-Ghostwriter und Content-Stratege für den DACH-Raum.\n\n${strategyContext(s)}`;
+// ---------- Prompt-Bausteine (werden per API gesendet oder im Prompt-Modus angezeigt) ----------
+
+export function ideasPrompt(s, { pillar, type, count = 6 }) {
   const typeIds = POST_TYPES.map((t) => t.id).join(', ');
-  const user = `Erstelle ${count} frische, konkrete Post-Ideen.
-${pillar ? `Alle Ideen zum Content-Pillar „${pillar.name}".` : 'Verteile die Ideen über die Content-Pillars.'}
+  return {
+    json: true,
+    system: `Du bist ein erfahrener LinkedIn-Ghostwriter und Content-Stratege für den DACH-Raum.\n\n${strategyContext(s)}`,
+    user: `Erstelle ${count} frische, konkrete Post-Ideen.
+${pillar ? `Alle Ideen zum Content-Pillar „${pillar.name}“.` : 'Verteile die Ideen über die Content-Pillars.'}
 ${type ? `Post-Typ für alle Ideen: ${type}.` : 'Nutze die bevorzugten Post-Typen.'}
 
 Jede Idee braucht einen fertig formulierten Hook (erste Zeile) und einen Satz zum Blickwinkel/Inhalt.
 Antworte ausschließlich mit einem JSON-Array ohne weiteren Text im Format:
-[{"hook": "...", "angle": "...", "type": "<eine von: ${typeIds}>", "pillar": "<exakter Pillar-Name>"}]`;
-  const raw = await ask(s, system, user);
-  return parseJSONArray(raw);
+[{"hook": "...", "angle": "...", "type": "<eine von: ${typeIds}>", "pillar": "<exakter Pillar-Name>"}]`,
+  };
 }
 
-export async function aiWritePost(s, { hook, angle, type, pillarName }) {
+export function writePrompt(s, { hook, angle, type, pillarName }) {
   const structure = POST_STRUCTURES[type]?.join(' → ') || '';
-  const system = `Du bist ein erfahrener LinkedIn-Ghostwriter.\n\n${strategyContext(s)}\n\n${STYLE_RULES}`;
-  const user = `Schreibe einen vollständigen LinkedIn-Post.
+  return {
+    system: `Du bist ein erfahrener LinkedIn-Ghostwriter.\n\n${strategyContext(s)}\n\n${STYLE_RULES}`,
+    user: `Schreibe einen vollständigen LinkedIn-Post.
 Hook: ${hook}
 Blickwinkel: ${angle || '-'}
-Post-Typ: ${POST_TYPES.find((t) => t.id === type)?.label || type}${structure ? ` (Struktur: ${structure})` : ''}
+Post-Typ: ${POST_TYPES.find((t) => t.id === type)?.label || type || '-'}${structure ? ` (Struktur: ${structure})` : ''}
 Content-Pillar: ${pillarName || '-'}
 
-Gib nur den Post-Text zurück, ohne Einleitung oder Kommentar.`;
-  return ask(s, system, user);
+Gib nur den Post-Text zurück, ohne Einleitung oder Kommentar.`,
+  };
 }
 
-export async function aiRewrite(s, text, instruction) {
-  const system = `Du bist ein erfahrener LinkedIn-Editor.\n\n${strategyContext(s)}\n\n${STYLE_RULES}`;
-  const user = `Überarbeite diesen LinkedIn-Post. Aufgabe: ${instruction}
+export function rewritePrompt(s, text, instruction) {
+  return {
+    system: `Du bist ein erfahrener LinkedIn-Editor.\n\n${strategyContext(s)}\n\n${STYLE_RULES}`,
+    user: `Überarbeite diesen LinkedIn-Post. Aufgabe: ${instruction}
 
 Gib nur den überarbeiteten Post-Text zurück, ohne Einleitung.
 
 --- POST ---
-${text}`;
-  return ask(s, system, user);
+${text}`,
+  };
 }
 
-export async function aiHooks(s, text) {
-  const system = `Du bist Experte für LinkedIn-Hooks.\n\n${strategyContext(s)}`;
-  const user = `Schlage 5 alternative erste Zeilen (Hooks) für diesen Post vor, jeweils mit einer anderen Hook-Formel (z. B. Zahl, Gegenthese, Szene, Ergebnis, Frage).
+export function hooksPrompt(s, text) {
+  return {
+    json: true,
+    system: `Du bist Experte für LinkedIn-Hooks.\n\n${strategyContext(s)}`,
+    user: `Schlage 5 alternative erste Zeilen (Hooks) für diesen Post vor, jeweils mit einer anderen Hook-Formel (z. B. Zahl, Gegenthese, Szene, Ergebnis, Frage).
 Antworte ausschließlich mit einem JSON-Array von Strings.
 
 --- POST ---
-${text}`;
-  return parseJSONArray(await ask(s, system, user));
+${text}`,
+  };
 }
 
-export async function aiAdaptViral(s, post) {
-  const system = `Du bist ein erfahrener LinkedIn-Ghostwriter.\n\n${strategyContext(s)}\n\n${STYLE_RULES}`;
-  const user = `Hier ist ein Post, dessen Struktur gut funktioniert (Gründe: ${post.why.join(', ')}).
+export function adaptPrompt(s, post) {
+  return {
+    system: `Du bist ein erfahrener LinkedIn-Ghostwriter.\n\n${strategyContext(s)}\n\n${STYLE_RULES}`,
+    user: `Hier ist ein Post, dessen Struktur gut funktioniert${(post.why || []).length ? ` (Gründe: ${post.why.join(', ')})` : ''}.
 Übernimm NUR die Struktur und Mechanik – nicht den Inhalt oder Formulierungen – und schreibe einen neuen, eigenständigen Post für meine Nische und Zielgruppe.
 
 Gib nur den neuen Post-Text zurück.
 
 --- VORLAGE ---
-${post.text}`;
-  return ask(s, system, user);
+${post.text}`,
+  };
 }
 
-export async function aiInsights(s, drafts) {
-  const system = `Du bist ein LinkedIn-Content-Stratege.\n\n${strategyContext(s)}`;
+export function insightsPrompt(s, drafts) {
   const sample = drafts
     .slice(0, 12)
     .map((d, i) => `#${i + 1} (${d.type || '-'}): ${d.text.slice(0, 400)}`)
     .join('\n\n');
-  const user = `Analysiere meine Strategie${drafts.length ? ' und meine letzten Entwürfe' : ''} und gib mir 5 konkrete, umsetzbare Insights: Was fehlt im Content-Mix, welche Themen würden bei meiner Zielgruppe besonders ziehen, welche Hooks sollte ich testen?
+  return {
+    json: true,
+    system: `Du bist ein LinkedIn-Content-Stratege.\n\n${strategyContext(s)}`,
+    user: `Analysiere meine Strategie${drafts.length ? ' und meine letzten Entwürfe' : ''} und gib mir 5 konkrete, umsetzbare Insights: Was fehlt im Content-Mix, welche Themen würden bei meiner Zielgruppe besonders ziehen, welche Hooks sollte ich testen?
 Antworte ausschließlich mit einem JSON-Array: [{"title": "...", "text": "..."}]
-${sample ? `\n--- ENTWÜRFE ---\n${sample}` : ''}`;
-  return parseJSONArray(await ask(s, system, user));
+${sample ? `\n--- ENTWÜRFE ---\n${sample}` : ''}`,
+  };
 }
+
+// Ein Prompt als ein zusammenhängender Text zum Einfügen in Claude (claude.ai)
+export function promptAsText({ system, user }) {
+  return `${system}\n\n---\n\n${user}`;
+}
+
+// Prompt per API ausführen; bei JSON-Prompts wird die Liste geparst
+export async function runPrompt(s, prompt) {
+  const raw = await ask(s, prompt.system, prompt.user);
+  return prompt.json ? parseJSONArray(raw) : raw;
+}
+
+export const aiIdeas = (s, opts) => runPrompt(s, ideasPrompt(s, opts));
+export const aiWritePost = (s, opts) => runPrompt(s, writePrompt(s, opts));
+export const aiRewrite = (s, text, instruction) => runPrompt(s, rewritePrompt(s, text, instruction));
+export const aiHooks = (s, text) => runPrompt(s, hooksPrompt(s, text));
+export const aiAdaptViral = (s, post) => runPrompt(s, adaptPrompt(s, post));
+export const aiInsights = (s, drafts) => runPrompt(s, insightsPrompt(s, drafts));
+
+export { strategyContext };

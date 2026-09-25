@@ -2,6 +2,8 @@ import { store, uid } from '../store.js';
 import { GRAPHIC_TEMPLATES, THEMES, FORMATS } from '../data.js';
 import { renderGraphic, downloadCanvas, canvasesToPdf } from '../graphics.js';
 import { esc, openModal, toast } from '../ui.js';
+import { promptModal } from '../assist.js';
+import { graphicDesignPrompt, carouselDesignPrompt } from '../designprompt.js';
 
 let tab = 'templates';
 let selected = 0;
@@ -109,6 +111,7 @@ function editModal(s, tpl, fields, rerender) {
         <div class="row">
           <button class="btn btn-primary" id="dl">PNG herunterladen</button>
           <button class="btn" id="to-car">+ Zum Carousel</button>
+          <button class="btn" id="cd-prompt">Prompt für Claude Design</button>
         </div>
         <p class="tiny">Tipp: Grafik + Post-Text zusammen posten. Das Bild stoppt den Scroll, der Text liefert den Kontext.</p>
       </div>
@@ -118,6 +121,10 @@ function editModal(s, tpl, fields, rerender) {
   const draw = () => renderGraphic(cv, tpl, optsFor(s, fields));
   m.el.querySelectorAll('[data-f]').forEach((inp) => inp.addEventListener('input', () => { fields[inp.dataset.f] = inp.value; draw(); }));
   m.el.querySelector('#dl').addEventListener('click', () => downloadCanvas(cv, `postlab-${tpl.id}`));
+  m.el.querySelector('#cd-prompt').addEventListener('click', () => {
+    m.close();
+    designModal(graphicDesignPrompt(s, tpl, fields), 'Grafik mit Claude Design');
+  });
   m.el.querySelector('#to-car').addEventListener('click', () => {
     store.update((st) => st.carousel.slides.push({ id: uid(), tpl: tpl.id, fields: { ...fields } }));
     toast('Zum Carousel hinzugefügt');
@@ -146,7 +153,7 @@ function carousel(body, s, rerender) {
       <div class="card-head"><h2>Carousel-Builder</h2>
         <div class="row">
           <label class="row small" style="gap:6px"><input type="checkbox" id="pn" ${s.carousel.pageNumbers ? 'checked' : ''}> Seitenzahlen</label>
-          ${slides.length ? '<button class="btn" id="pngs">Alle als PNG</button><button class="btn btn-primary" id="pdf">Als PDF exportieren</button>' : ''}
+          ${slides.length ? '<button class="btn" id="car-prompt">Prompt für Claude Design</button><button class="btn" id="pngs">Alle als PNG</button><button class="btn btn-primary" id="pdf">Als PDF exportieren</button>' : ''}
         </div></div>
       <p class="muted small" style="margin-top:0">LinkedIn-Carousels werden als PDF-Dokument hochgeladen. Empfohlen: Hochformat 1080×1350, 5–10 Slides, Cover mit großem Versprechen, letzte Slide mit CTA.</p>
       <div class="slides">
@@ -242,6 +249,9 @@ function carousel(body, s, rerender) {
     renderGraphic(c, tplById(sl.tpl), optsFor(s, sl.fields, pageOpts(i)));
     return c;
   });
+  body.querySelector('#car-prompt')?.addEventListener('click', () => {
+    designModal(carouselDesignPrompt(s, slides, tplById, s.carousel.pageNumbers), 'Carousel mit Claude Design');
+  });
   body.querySelector('#pdf')?.addEventListener('click', () => {
     const blob = canvasesToPdf(fullCanvases());
     const a = document.createElement('a');
@@ -253,5 +263,13 @@ function carousel(body, s, rerender) {
   });
   body.querySelector('#pngs')?.addEventListener('click', () => {
     fullCanvases().forEach((c, i) => setTimeout(() => downloadCanvas(c, `postlab-slide-${i + 1}`), i * 250));
+  });
+}
+
+function designModal(text, title) {
+  promptModal({
+    title,
+    text,
+    hint: 'Design-Briefing mit Format, Farben, Texten und Layout. Kopieren und in Claude Design einfügen – Claude gestaltet die Grafik danach frei aus.',
   });
 }

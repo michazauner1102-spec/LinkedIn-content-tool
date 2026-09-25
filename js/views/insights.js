@@ -2,8 +2,9 @@ import { store } from '../store.js';
 import { BEST_TIMES, ALGO_INSIGHTS, HOOK_FORMULAS, POST_TYPES } from '../data.js';
 import { checkPost, toDu, audienceLabel } from '../generator.js';
 import { pillarMix, balanceScore } from '../plan.js';
-import { aiEnabled, aiInsights } from '../ai.js';
-import { esc, busy, toast, copyText, typeLabel } from '../ui.js';
+import { aiEnabled, insightsPrompt } from '../ai.js';
+import { assist } from '../assist.js';
+import { esc, copyText, typeLabel } from '../ui.js';
 
 let aiResult = null;
 
@@ -66,7 +67,7 @@ export function render(el, { navigate }) {
         ${weakList.length ? `<h3 style="margin:20px 0 8px">Häufigste Schwachstellen</h3>
           <ul class="checks">${weakList.map(([l, n]) => `<li class="bad"><span class="st">✕</span><div>${esc(l)}<small>in ${n} von ${written.length} Posts</small></div></li>`).join('')}</ul>` : ''}
         <div class="row" style="margin-top:20px">
-          <button class="btn btn-primary" id="ai-ins">KI-Analyse meiner Strategie</button>
+          <button class="btn btn-primary" id="ai-ins">${aiEnabled(s) ? 'KI-Analyse meiner Strategie' : 'Prompt für Strategie-Analyse'}</button>
         </div>
         <div id="ai-out">${aiResult ? aiList(aiResult) : ''}</div>
       </section>
@@ -103,17 +104,16 @@ export function render(el, { navigate }) {
     </section>`;
 
   el.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copyText(b.dataset.copy)));
-  el.querySelector('#ai-ins').addEventListener('click', async (e) => {
-    if (!aiEnabled(s)) { toast('Bitte zuerst einen API-Schlüssel hinterlegen.'); return navigate('#/settings'); }
-    const btn = e.currentTarget;
-    busy(btn, true, 'Claude analysiert …');
-    try {
-      aiResult = await aiInsights(s, written);
-      el.querySelector('#ai-out').innerHTML = aiList(aiResult);
-    } catch (err) {
-      toast(`KI-Fehler: ${err.message}`);
-    }
-    busy(btn, false);
+  el.querySelector('#ai-ins').addEventListener('click', (e) => {
+    assist(s, insightsPrompt(s, written), {
+      title: 'Strategie-Analyse mit Claude',
+      btn: e.currentTarget,
+      busyLabel: 'Claude analysiert …',
+      onResult: (list) => {
+        aiResult = list.filter((i) => i && i.title);
+        el.querySelector('#ai-out').innerHTML = aiList(aiResult);
+      },
+    });
   });
 }
 

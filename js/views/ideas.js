@@ -2,8 +2,9 @@ import { store, uid } from '../store.js';
 import { POST_TYPES, POST_TEMPLATES } from '../data.js';
 import { localIdeas, toDu } from '../generator.js';
 import { createDraft } from '../plan.js';
-import { aiEnabled, aiIdeas } from '../ai.js';
-import { esc, typeLabel, busy, toast } from '../ui.js';
+import { aiEnabled, ideasPrompt } from '../ai.js';
+import { assist } from '../assist.js';
+import { esc, typeLabel } from '../ui.js';
 
 let filter = { pillarId: '', type: '' };
 let fresh = [];
@@ -28,7 +29,7 @@ export function render(el, { navigate }) {
           </select></label>
         <span class="spacer"></span>
         <button class="btn" id="gen-local">Aus Vorlagen</button>
-        <button class="btn btn-primary" id="gen-ai" ${aiEnabled(s) ? '' : 'title="API-Schlüssel in den Einstellungen hinterlegen"'}>Mit Claude generieren</button>
+        <button class="btn btn-primary" id="gen-ai">${aiEnabled(s) ? 'Mit Claude generieren' : 'Prompt für Claude'}</button>
       </div>
       ${!s.onboarded ? '<p class="small muted" style="margin:12px 0 0">Tipp: Mit abgeschlossener <a href="#/strategy">Strategie</a> werden die Ideen auf Zielgruppe und Pillars zugeschnitten.</p>' : ''}
     </div>
@@ -48,25 +49,23 @@ export function render(el, { navigate }) {
   el.querySelector('#f-type').addEventListener('change', (e) => { filter.type = e.target.value; fresh = []; rerender(); });
   el.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; rerender(); }));
   el.querySelector('#gen-local').addEventListener('click', () => { fresh = localIdeas(s, { ...filter, count: 9 }); tab = 'neu'; rerender(); });
-  el.querySelector('#gen-ai').addEventListener('click', async (e) => {
-    if (!aiEnabled(s)) { toast('Bitte zuerst einen API-Schlüssel in den Einstellungen hinterlegen.'); return navigate('#/settings'); }
-    const btn = e.currentTarget;
-    busy(btn, true, 'Claude schreibt Ideen …');
-    try {
-      const pillar = s.pillars.find((p) => p.id === filter.pillarId);
-      const raw = await aiIdeas(s, { pillar, type: filter.type, count: 9 });
-      fresh = raw.map((r) => ({
-        id: uid(), hook: r.hook, angle: r.angle,
-        type: POST_TYPES.some((t) => t.id === r.type) ? r.type : filter.type || 'story',
-        pillarId: filter.pillarId || s.pillars.find((p) => p.name === r.pillar)?.id || '',
-        source: 'ki', createdAt: Date.now(),
-      }));
-      tab = 'neu';
-      rerender();
-    } catch (err) {
-      busy(btn, false);
-      toast(`KI-Fehler: ${err.message}`);
-    }
+  el.querySelector('#gen-ai').addEventListener('click', (e) => {
+    const pillar = s.pillars.find((p) => p.id === filter.pillarId);
+    assist(s, ideasPrompt(s, { pillar, type: filter.type, count: 9 }), {
+      title: 'Post-Ideen von Claude',
+      btn: e.currentTarget,
+      busyLabel: 'Claude schreibt Ideen …',
+      onResult: (raw) => {
+        fresh = raw.filter((r) => r && r.hook).map((r) => ({
+          id: uid(), hook: String(r.hook), angle: String(r.angle || ''),
+          type: POST_TYPES.some((t) => t.id === r.type) ? r.type : filter.type || 'story',
+          pillarId: filter.pillarId || s.pillars.find((p) => p.name === r.pillar)?.id || '',
+          source: 'ki', createdAt: Date.now(),
+        }));
+        tab = 'neu';
+        rerender();
+      },
+    });
   });
 
   el.querySelectorAll('[data-tpl]').forEach((b) =>
