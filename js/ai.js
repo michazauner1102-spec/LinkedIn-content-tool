@@ -1,7 +1,7 @@
 // KI-Anbindung über das offizielle Anthropic TypeScript/JS SDK (direkt im Browser).
 // Der API-Schlüssel wird nur lokal gespeichert und direkt an api.anthropic.com gesendet.
 
-import { POST_TYPES, POST_STRUCTURES, CTA_GOALS } from './data.js';
+import { POST_TYPES, POST_STRUCTURES, CTA_GOALS, VISUALS, GRAPHIC_TEMPLATES } from './data.js';
 import { audienceLabel } from './generator.js';
 
 export const MODELS = [
@@ -67,27 +67,32 @@ const STYLE_RULES = `Regeln für LinkedIn-Posts:
 - Ende mit einer klaren Frage oder Handlungsaufforderung passend zum Hauptziel.
 - Erfinde keine konkreten Kundennamen. Wo echte Zahlen oder Erlebnisse des Autors nötig sind, setze [Platzhalter in eckigen Klammern].`;
 
-async function ask(s, system, user) {
+async function ask(s, system, user, { web = false } = {}) {
   const client = await getClient(s.settings.apiKey.trim());
   const model = s.settings.model || 'claude-opus-5';
-  const params = {
-    model,
-    max_tokens: 16000,
-    system,
-    messages: [{ role: 'user', content: user }],
-  };
+  const messages = [{ role: 'user', content: user }];
+  const params = { model, max_tokens: 16000, system, messages };
   if (model !== 'claude-haiku-4-5') params.output_config = { effort: 'medium' };
+  if (web) {
+    // Websuche & Web-Fetch laufen serverseitig bei Anthropic
+    params.tools = model === 'claude-haiku-4-5'
+      ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }]
+      : [
+        { type: 'web_search_20260209', name: 'web_search', max_uses: 6 },
+        { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 6 },
+      ];
+  }
 
-  let response;
-  if (model === 'claude-opus-5') {
+  const call = () => (model === 'claude-opus-5'
     // Bei einer Ablehnung durch Sicherheitsklassifikatoren übernimmt serverseitig ein Ersatzmodell.
-    response = await client.beta.messages.create({
-      ...params,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-    });
-  } else {
-    response = await client.messages.create(params);
+    ? client.beta.messages.create({ ...params, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' })
+    : client.messages.create(params));
+
+  let response = await call();
+  // Lange Server-Tool-Schleifen pausieren; mit der bisherigen Antwort fortsetzen
+  for (let i = 0; response.stop_reason === 'pause_turn' && i < 4; i++) {
+    messages.splice(1, messages.length - 1, { role: 'assistant', content: response.content });
+    response = await call();
   }
 
   if (response.stop_reason === 'refusal') {
@@ -98,6 +103,13 @@ async function ask(s, system, user) {
     .map((b) => b.text)
     .join('')
     .trim();
+}
+
+export function parseJSONObject(text) {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('Antwort konnte nicht gelesen werden – es fehlt das JSON-Objekt.');
+  return JSON.parse(text.slice(start, end + 1));
 }
 
 export function parseJSONArray(text) {
@@ -189,6 +201,31 @@ ${sample ? `\n--- ENTWÜRFE ---\n${sample}` : ''}`,
   };
 }
 
+export function researchPrompt(s, topic) {
+  const typeIds = POST_TYPES.map((t) => t.id).join(' | ');
+  const visualIds = VISUALS.map((v) => v.id).join(' | ');
+  const tplIds = GRAPHIC_TEMPLATES.map((t) => t.id).join(' | ');
+  return {
+    json: 'object',
+    web: true,
+    system: `Du bist LinkedIn-Content-Stratege für den DACH-Raum und recherchierst gründlich im Web.\n\n${strategyContext(s)}`,
+    user: `Thema: „${topic}“
+
+1. Suche per Websuche nach LinkedIn-Posts zu diesem Thema, die überdurchschnittlich gut performen (viele Reaktionen/Kommentare). Nutze z. B. „site:linkedin.com/posts ${topic}“ und Varianten, bevorzugt deutschsprachig und aus den letzten Monaten. Öffne vielversprechende Treffer, wenn möglich.
+2. Nimm nur Posts auf, die du wirklich gefunden hast – mit URL. Erfinde nichts. Zahlen nur, wenn sichtbar, sonst null. Wenn du keine findest, gib eine leere Liste zurück und stütze die Empfehlungen auf allgemeine Best Practices.
+3. Leite daraus ab, welche Struktur und welche Grafik für MEINEN Post zu diesem Thema am besten funktionieren (für meine Zielgruppe und Tonalität).
+
+Antworte ausschließlich mit einem JSON-Objekt ohne weiteren Text:
+{
+  "posts": [{"author": "...", "url": "https://www.linkedin.com/...", "excerpt": "erste 1–3 Zeilen wörtlich", "likes": null, "comments": null, "type": "<${typeIds}>", "visual": "<${visualIds}> oder null", "why": ["kurzer Grund", "..."]}],
+  "pattern": "Was die erfolgreichen Posts gemeinsam haben (2–3 Sätze)",
+  "structure": {"type": "<${typeIds}>", "steps": ["Schritt 1 konkret für mein Thema", "..."]},
+  "hooks": ["Hook-Variante 1", "Hook-Variante 2", "Hook-Variante 3"],
+  "graphic": {"visual": "<${visualIds}>", "template": "<${tplIds}>", "why": "Warum diese Grafik", "fields": {"title": "...", "subtitle": "...", "items": "Punkt 1\\nPunkt 2"}}
+}`,
+  };
+}
+
 // Ein Prompt als ein zusammenhängender Text zum Einfügen in Claude (claude.ai)
 export function promptAsText({ system, user }) {
   return `${system}\n\n---\n\n${user}`;
@@ -196,7 +233,8 @@ export function promptAsText({ system, user }) {
 
 // Prompt per API ausführen; bei JSON-Prompts wird die Liste geparst
 export async function runPrompt(s, prompt) {
-  const raw = await ask(s, prompt.system, prompt.user);
+  const raw = await ask(s, prompt.system, prompt.user, { web: prompt.web });
+  if (prompt.json === 'object') return parseJSONObject(raw);
   return prompt.json ? parseJSONArray(raw) : raw;
 }
 

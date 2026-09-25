@@ -10,6 +10,11 @@ import { graphicDesignPrompt, carouselDesignPrompt, referenceDesignPrompt } from
 let tab = 'templates';
 let selected = 0;
 let visualFilter = '';
+let pending = null; // Vorlage, die beim nächsten Öffnen der Galerie direkt bearbeitet wird
+
+export function openTemplateLater(tplId, fields) {
+  pending = { tplId, fields };
+}
 
 const tplById = (id) => GRAPHIC_TEMPLATES.find((t) => t.id === id) || GRAPHIC_TEMPLATES[0];
 
@@ -29,6 +34,11 @@ export function render(el, { navigate, params }) {
   if (params?.get('tab') === 'viral') {
     tab = 'viral';
     history.replaceState(null, '', '#/gallery');
+  }
+  const openNow = pending;
+  if (openNow) {
+    pending = null;
+    tab = 'templates';
   }
   const s = store.get();
   const g = s.graphicPrefs;
@@ -63,6 +73,11 @@ export function render(el, { navigate, params }) {
   el.querySelector('#showAuthor').addEventListener('change', (e) => { store.update((st) => { st.graphicPrefs.showAuthor = e.target.checked; }); rerender(); });
 
   const body = el.querySelector('#tab-body');
+  if (openNow) {
+    templates(body, s, rerender);
+    editModal(s, tplById(openNow.tplId), { ...tplById(openNow.tplId).fields, ...openNow.fields }, rerender);
+    return;
+  }
   if (tab === 'templates') templates(body, s, rerender);
   else if (tab === 'viral') viralRefs(body, s, refs, daily, rerender);
   else carousel(body, s, rerender);

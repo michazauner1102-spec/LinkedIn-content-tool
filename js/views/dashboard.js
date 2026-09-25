@@ -41,6 +41,14 @@ export function render(el, { navigate }) {
         <a class="btn" href="#/strategy">Jetzt starten</a>
       </div>` : ''}
 
+    <form class="card research-quick" id="dash-research">
+      <label for="dash-topic"><b>Thema recherchieren</b> <span class="small muted">– ähnliche Top-Posts, Struktur und Grafik in Sekunden</span></label>
+      <div class="row research-form" style="margin-top:10px">
+        <input type="search" id="dash-topic" placeholder="Worüber willst du posten? z. B. KI im Maklerbüro" autocomplete="off">
+        <button class="btn btn-primary">Recherchieren</button>
+      </div>
+    </form>
+
     <div class="layout-dash">
       <div class="stack">
         <div class="grid g4">
@@ -119,6 +127,13 @@ export function render(el, { navigate }) {
         </div>` : ''}
       </aside>
     </div>`;
+
+  el.querySelector('#dash-research').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = el.querySelector('#dash-topic').value.trim();
+    if (!q) return toast('Bitte ein Thema eingeben.');
+    navigate(`#/research?q=${encodeURIComponent(q)}`);
+  });
 
   el.querySelector('[data-act="new-ideas"]').addEventListener('click', async (e) => {
     const btn = e.currentTarget;

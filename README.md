@@ -6,6 +6,7 @@ Ein an Taplio angelehntes Content-Tool für LinkedIn-Posts – auf Deutsch, ohne
 
 | Bereich | Was es kann |
 |---|---|
+| **Themen-Recherche** | Thema eingeben → ähnliche, gut performende Beiträge (aus Tages-Feed, Swipe-File und Beispielen; per Knopf live im Web über Claude-Websuche), daraus Strukturvorschlag, Hook-Varianten und passende Grafik (vorausgefüllt in der Galerie oder als Claude-Design-Prompt) |
 | **Strategie** (Onboarding) | 5 Schritte: Profil & Nische → Zielgruppe (Schmerzpunkte, Ziele, Einwände) → Content-Pillars mit Gewichtung → Post-Typen (12 Formate mit Reichweite/Vertrauen/Leads-Profil) → Tonalität, Ansprache (du/Sie), Emojis, Ziel, Posts pro Woche |
 | **Dashboard** | Kennzahlen, „Post-Ideen für dich“, virale Posts der eigenen Nische, Wochenplan (Pillar- und Typ-Rotation nach Gewichtung), Content-Mix Ist vs. Soll, Insight des Tages |
 | **Post-Ideen** | Ideen je Pillar und Post-Typ – aus Hook-Formeln + Zielgruppendaten oder per Claude; speicherbar |

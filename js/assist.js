@@ -1,7 +1,7 @@
 // Einheitlicher Weg zu Claude: mit API-Schlüssel direkt per API,
 // ohne Schlüssel als Prompt zum Kopieren (claude.ai) – die Antwort wird hier wieder eingefügt.
 
-import { aiEnabled, runPrompt, promptAsText, parseJSONArray } from './ai.js';
+import { aiEnabled, runPrompt, promptAsText, parseJSONArray, parseJSONObject } from './ai.js';
 import { esc, openModal, copyText, busy, toast } from './ui.js';
 
 const CLAUDE_URL = 'https://claude.ai/new';
@@ -21,10 +21,12 @@ export async function assist(s, prompt, { title = 'Prompt für Claude', btn, bus
   promptModal({
     title,
     text: promptAsText(prompt),
-    hint: 'Kein API-Schlüssel hinterlegt. Kopiere den Prompt, füge ihn in Claude ein und übernimm die Antwort unten.',
+    hint: prompt.web
+      ? 'Kein API-Schlüssel hinterlegt. Kopiere den Prompt in Claude (Websuche aktivieren) und füge die Antwort unten ein.'
+      : 'Kein API-Schlüssel hinterlegt. Kopiere den Prompt, füge ihn in Claude ein und übernimm die Antwort unten.',
     answer: {
-      placeholder: prompt.json ? 'Antwort von Claude hier einfügen (die JSON-Liste) …' : 'Antwort von Claude hier einfügen …',
-      apply: (raw) => onResult(prompt.json ? parseJSONArray(raw) : raw.trim()),
+      placeholder: prompt.json ? 'Antwort von Claude hier einfügen (das JSON) …' : 'Antwort von Claude hier einfügen …',
+      apply: (raw) => onResult(prompt.json === 'object' ? parseJSONObject(raw) : prompt.json ? parseJSONArray(raw) : raw.trim()),
     },
   });
 }

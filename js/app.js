@@ -10,9 +10,11 @@ import * as viral from './views/viral.js';
 import * as insights from './views/insights.js';
 import * as gallery from './views/gallery.js';
 import * as settings from './views/settings.js';
+import * as research from './views/research.js';
 
 const ROUTES = {
   dashboard: { view: dashboard, title: (s) => `Willkommen zurück${s.profile.name ? `, ${s.profile.name}` : ''}`, label: 'Dashboard' },
+  research: { view: research, title: () => 'Themen-Recherche', label: 'Themen-Recherche' },
   strategy: { view: onboarding, title: () => 'Content-Strategie', label: 'Strategie' },
   write: { view: editor, title: () => 'Post schreiben', label: 'Schreiben', group: 'write' },
   calendar: { view: calendar, title: () => 'Entwürfe & Kalender', label: 'Entwürfe & Kalender', group: 'write' },
@@ -23,7 +25,7 @@ const ROUTES = {
   settings: { view: settings, title: () => 'Einstellungen', label: 'Einstellungen' },
 };
 
-const NAV = ['dashboard', 'strategy', 'write', 'calendar', 'ideas', 'viral', 'insights', 'gallery'];
+const NAV = ['dashboard', 'research', 'strategy', 'write', 'calendar', 'ideas', 'viral', 'insights', 'gallery'];
 
 function parseHash() {
   const raw = location.hash.replace(/^#\/?/, '');

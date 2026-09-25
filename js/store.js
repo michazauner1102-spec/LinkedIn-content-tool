@@ -14,6 +14,7 @@ const DEFAULT_STATE = {
   swipe: [], // eigene gesammelte Posts: { id, author, text, niche, type, note, likes }
   graphicPrefs: { theme: 'blue', format: 'square', showAuthor: false, handle: '', v: 2 },
   carousel: { slides: [], pageNumbers: true },
+  research: { topic: '', result: null, history: [] },
   settings: { apiKey: '', model: 'claude-opus-5' },
 };
 
