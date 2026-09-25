@@ -92,3 +92,31 @@ export function toLocalInput(ts) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+// Bild verkleinern (max. Kantenlänge) und als JPEG-Data-URL zurückgeben – spart localStorage-Platz
+export function imageFileToDataUrl(file, max = 1080) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Datei konnte nicht gelesen werden'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Kein gültiges Bild'));
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Nur http(s)- und eigene data:image-URLs als Bildquelle zulassen
+export const safeImageUrl = (u) => (/^(https:\/\/|data:image\/(jpeg|png|webp|gif);base64,)/.test(u || '') ? u : '');

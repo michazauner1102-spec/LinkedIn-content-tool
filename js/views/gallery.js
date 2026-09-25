@@ -1,12 +1,15 @@
 import { store, uid } from '../store.js';
-import { GRAPHIC_TEMPLATES, THEMES, FORMATS } from '../data.js';
+import { GRAPHIC_TEMPLATES, THEMES, FORMATS, VISUALS, NICHES } from '../data.js';
 import { renderGraphic, downloadCanvas, canvasesToPdf } from '../graphics.js';
-import { esc, openModal, toast } from '../ui.js';
+import { esc, openModal, toast, fmtNum } from '../ui.js';
+import { getDaily, loadDaily } from '../daily.js';
+import { postImages } from './viral.js';
 import { promptModal } from '../assist.js';
-import { graphicDesignPrompt, carouselDesignPrompt } from '../designprompt.js';
+import { graphicDesignPrompt, carouselDesignPrompt, referenceDesignPrompt } from '../designprompt.js';
 
 let tab = 'templates';
 let selected = 0;
+let visualFilter = '';
 
 const tplById = (id) => GRAPHIC_TEMPLATES.find((t) => t.id === id) || GRAPHIC_TEMPLATES[0];
 
@@ -22,13 +25,21 @@ function optsFor(s, fields, extra = {}) {
   };
 }
 
-export function render(el, { navigate }) {
+export function render(el, { navigate, params }) {
+  if (params?.get('tab') === 'viral') {
+    tab = 'viral';
+    history.replaceState(null, '', '#/gallery');
+  }
   const s = store.get();
   const g = s.graphicPrefs;
+  const daily = getDaily();
+  if (daily === undefined) loadDaily().then(() => { if (el.isConnected) render(el, { navigate }); });
+  const refs = collectRefs(s, daily);
 
   el.innerHTML = `
     <div class="tabs">
       <button class="${tab === 'templates' ? 'on' : ''}" data-tab="templates">Grafik-Vorlagen</button>
+      <button class="${tab === 'viral' ? 'on' : ''}" data-tab="viral">Aus viralen Posts (${refs.length})</button>
       <button class="${tab === 'carousel' ? 'on' : ''}" data-tab="carousel">Carousel-Builder (${s.carousel.slides.length})</button>
     </div>
     <div class="card" style="margin-bottom:18px">
@@ -53,7 +64,57 @@ export function render(el, { navigate }) {
 
   const body = el.querySelector('#tab-body');
   if (tab === 'templates') templates(body, s, rerender);
+  else if (tab === 'viral') viralRefs(body, s, refs, daily, rerender);
   else carousel(body, s, rerender);
+}
+
+// Alle Bilder aus der täglichen Recherche und dem Swipe-File
+function collectRefs(s, daily) {
+  const posts = [...(daily?.posts || []).map((p) => ({ ...p, source: 'daily' })), ...s.swipe.map((p) => ({ ...p, source: 'swipe' }))];
+  const seen = new Set();
+  const refs = [];
+  for (const post of posts) {
+    for (const img of postImages(post)) {
+      if (seen.has(img.url)) continue;
+      seen.add(img.url);
+      refs.push({ post, img, visual: VISUALS.find((v) => v.id === post.visual) || VISUALS.find((v) => v.id === 'other') });
+    }
+  }
+  return refs;
+}
+
+function viralRefs(body, s, refs, daily, rerender) {
+  const used = VISUALS.filter((v) => refs.some((r) => r.visual.id === v.id));
+  const list = refs.filter((r) => !visualFilter || r.visual.id === visualFilter);
+  body.innerHTML = `
+    <p class="muted small" style="margin:0 0 12px">Grafiken und Bilder aus viralen Posts – aus der täglichen Recherche und deinem Swipe-File. Sie gehören den jeweiligen Urhebern: nutze sie als Inspiration und baue sie mit einer eigenen Vorlage oder mit Claude Design im eigenen Stil nach.</p>
+    ${used.length > 1 ? `<div class="chips" style="margin-bottom:16px"><button class="chip ${!visualFilter ? 'on' : ''}" data-vf="">Alle</button>${used.map((v) => `<button class="chip ${visualFilter === v.id ? 'on' : ''}" data-vf="${v.id}">${esc(v.label)}</button>`).join('')}</div>` : ''}
+    ${list.length ? `<div class="ref-grid">${list.map((r, i) => `
+      <div class="ref-item" data-ref="${i}">
+        <img src="${esc(r.img.url)}" alt="${esc(r.img.alt || r.visual.label)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.ref-item').remove()">
+        <div class="cap">
+          <div class="row" style="gap:6px"><span class="tag blue">${esc(r.visual.label)}</span>${r.post.source === 'swipe' ? '<span class="tag">Swipe-File</span>' : ''}</div>
+          <div class="small"><b>${esc(r.post.author || 'Unbekannt')}</b>${NICHES.find((n) => n.id === r.post.niche) ? ` · ${esc(NICHES.find((n) => n.id === r.post.niche).label)}` : ''}${r.post.likes != null ? ` · ${fmtNum(r.post.likes)} Reaktionen` : ''}</div>
+          <div class="row" style="gap:6px">
+            ${r.visual.tpl ? `<button class="btn btn-sm" data-ref-tpl="${i}">Eigene Vorlage</button>` : ''}
+            <button class="btn btn-sm" data-ref-prompt="${i}">Prompt für Claude Design</button>
+          </div>
+          ${/^https:\/\//.test(r.post.url || '') ? `<a class="tiny" href="${esc(r.post.url)}" target="_blank" rel="noopener">Original auf LinkedIn ↗</a>` : ''}
+        </div>
+      </div>`).join('')}</div>`
+      : `<div class="empty"><p>${daily === undefined ? 'Lade Grafiken …' : 'Noch keine Grafiken vorhanden. Sie kommen aus der täglichen Recherche – oder lade im Swipe-File (Virale Posts) eigene Screenshots hoch.'}</p>
+        <a class="btn" href="#/viral">Zu den viralen Posts</a></div>`}`;
+
+  body.querySelectorAll('[data-vf]').forEach((b) => b.addEventListener('click', () => { visualFilter = b.dataset.vf; rerender(); }));
+  body.querySelectorAll('[data-ref-tpl]').forEach((b) => b.addEventListener('click', () => {
+    const r = list[Number(b.dataset.refTpl)];
+    const tpl = tplById(r.visual.tpl);
+    editModal(s, tpl, { ...tpl.fields }, rerender);
+  }));
+  body.querySelectorAll('[data-ref-prompt]').forEach((b) => b.addEventListener('click', () => {
+    const r = list[Number(b.dataset.refPrompt)];
+    designModal(referenceDesignPrompt(s, r.post, r.img, r.visual), 'Nachbauen mit Claude Design');
+  }));
 }
 
 function templates(body, s, rerender) {

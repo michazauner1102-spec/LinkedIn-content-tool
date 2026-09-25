@@ -5,12 +5,13 @@
 // Aufruf: node scripts/validate-viral.mjs   (Exit-Code 1, wenn keine gültigen Posts übrig bleiben)
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { NICHES, POST_TYPES } from '../js/data.js';
+import { NICHES, POST_TYPES, VISUALS } from '../js/data.js';
 
 const FILE = new URL('../data/viral-daily.json', import.meta.url);
 const MAX_AGE_DAYS = 21;
 const niches = new Set(NICHES.map((n) => n.id));
 const types = new Set(POST_TYPES.map((t) => t.id));
+const visuals = new Set(VISUALS.map((v) => v.id));
 
 const raw = JSON.parse(readFileSync(FILE, 'utf8'));
 const input = Array.isArray(raw.posts) ? raw.posts : [];
@@ -46,6 +47,12 @@ for (const [i, p] of input.entries()) {
     postedAt: p.postedAt || null,
     language: p.language || 'de',
     why: Array.isArray(p.why) ? p.why.map(String).slice(0, 5) : [],
+    images: (Array.isArray(p.images) ? p.images : [])
+      .map((img) => (typeof img === 'string' ? { url: img } : img))
+      .filter((img) => img && /^https:\/\/[^\s"'<>]+$/.test(img.url || ''))
+      .slice(0, 4)
+      .map((img) => ({ url: img.url, ...(img.alt ? { alt: String(img.alt).slice(0, 200) } : {}) })),
+    visual: visuals.has(p.visual) ? p.visual : null,
   });
 }
 
@@ -54,7 +61,7 @@ const out = { updatedAt: raw.updatedAt || new Date().toISOString(), posts };
 writeFileSync(FILE, JSON.stringify(out, null, 2) + '\n');
 
 const perNiche = Object.fromEntries(NICHES.map((n) => [n.id, posts.filter((p) => p.niche === n.id).length]));
-console.log(`Gültige Posts: ${posts.length} (verworfen: ${problems.length})`);
+console.log(`Gültige Posts: ${posts.length} (verworfen: ${problems.length}), davon mit Bild: ${posts.filter((p) => p.images.length).length}`);
 console.log('Pro Nische:', perNiche);
 if (problems.length) console.log('Verworfen:\n  ' + problems.join('\n  '));
 if (!posts.length) process.exit(1);

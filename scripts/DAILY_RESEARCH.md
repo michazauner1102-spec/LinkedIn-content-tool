@@ -24,6 +24,9 @@ Diese Anleitung führt die tägliche Routine aus. Ziel: `data/viral-daily.json` 
    - `niche`: `immobilien | ki | sales | marketing | consulting | leadership | recruiting | finance`
    - `type`: `story | howto | listicle | hottake | casestudy | carousel | mythfact | lessons | behindscenes | beforeafter | poll | framework`
    - `why`: 2–4 kurze Gründe, warum der Post funktioniert (z. B. „Zahl im Hook“, „Persönliche Szene“, „Klare Liste“, „Frage als CTA“).
+   - `images`: Bilder/Grafiken **des Posts** (nicht Profilbilder, Logos oder Werbung), max. 4, jeweils `{ "url": "https://…", "alt": "kurze Beschreibung" }`. Quelle: die Bild-URLs im Post (meist `media.licdn.com/dms/image/…`) oder das `og:image` der Seite. Bei Carousels/Dokumenten das Cover-Bild. Keine Bilder herunterladen oder ins Repo legen – nur die URL.
+   - `visual`: Art der Grafik, eine von `carousel | quote | stat | list | infographic | chart | beforeafter | comparison | screenshot | textgraphic | photo | other` (weglassen, wenn der Post kein Bild hat).
+   - Posts mit gut gemachter Grafik bevorzugen – sie landen in der App auch in der Grafik-Galerie unter „Aus viralen Posts“.
 6. Neue Einträge **oben** in `posts` einfügen, `foundAt` = heutiges Datum, `updatedAt` = jetzt (ISO). Bestehende Einträge nicht löschen – das Skript entfernt alte automatisch.
 7. `node scripts/validate-viral.mjs` ausführen. Fehler beheben, bis es durchläuft.
 8. Commit `Daily viral posts JJJJ-MM-TT` und `git push origin claude/taplio-linkedin-tool-7w9ef7`.
@@ -45,6 +48,8 @@ Diese Anleitung führt die tägliche Routine aus. Ziel: `data/viral-daily.json` 
   "reposts": null,
   "postedAt": "2026-09-21",
   "language": "de",
-  "why": ["Ergebnis mit Zahl im Hook", "Nummerierte Schritte", "Frage als CTA"]
+  "why": ["Ergebnis mit Zahl im Hook", "Nummerierte Schritte", "Frage als CTA"],
+  "images": [{ "url": "https://media.licdn.com/dms/image/…", "alt": "Kennzahlen-Grafik mit drei Werten" }],
+  "visual": "stat"
 }
 ```

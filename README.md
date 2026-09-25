@@ -14,7 +14,7 @@ Ein an Taplio angelehntes Content-Tool für LinkedIn-Posts – auf Deutsch, ohne
 | **Virale Posts** | **Täglich neu:** echte LinkedIn-Posts aus einer täglichen Web-Recherche (`data/viral-daily.json`, siehe unten); Bibliothek mit 20 Beispiel-Posts (fiktive Autoren, bewährte Muster); eigenes **Swipe-File** mit automatischer Struktur-Analyse |
 | **Insights** | Content-Mix vs. Strategie, Lücken & häufigste Schwachstellen, beste Posting-Zeiten (Richtwerte), Algorithmus-Wissen, personalisierte Hook-Formeln, KI-Strategieanalyse |
 | **Post-Vorlagen** | 16 Textvorlagen zum Ausfüllen (Fehler-Geständnis, Anleitung, Listicle, Case Study, Mythos/Fakt, Framework …) – unter Post-Ideen oder direkt im Editor |
-| **Grafik-Galerie** | 24 häufig genutzte LinkedIn-Grafiken (u. a. Zitat, Statistik, Checkliste, Mythos/Fakt, Vorher/Nachher, Framework, Hot Take, Post-Screenshot, Do/Don’t, Carousel-Cover, Timeline, Top 3, Kennzahlen, Vergleich, Kundenstimme, Prozent-Balken, Frage & Antwort, Carousel-Endslide), 9 Farbwelten, 3 Formate, PNG-Download; **Carousel-Builder** mit PDF-Export für LinkedIn-Dokumente |
+| **Grafik-Galerie** | 24 häufig genutzte LinkedIn-Grafiken (u. a. Zitat, Statistik, Checkliste, Mythos/Fakt, Vorher/Nachher, Framework, Hot Take, Post-Screenshot, Do/Don’t, Carousel-Cover, Timeline, Top 3, Kennzahlen, Vergleich, Kundenstimme, Prozent-Balken, Frage & Antwort, Carousel-Endslide), 9 Farbwelten, 3 Formate, PNG-Download; Tab **„Aus viralen Posts“** mit den Grafiken aus der täglichen Recherche und dem Swipe-File (als Inspiration, mit passender eigener Vorlage und Claude-Design-Prompt zum Nachbauen); **Carousel-Builder** mit PDF-Export für LinkedIn-Dokumente |
 
 ## Starten
 

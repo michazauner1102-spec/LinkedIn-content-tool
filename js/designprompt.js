@@ -106,3 +106,27 @@ ${RULES}
 
 Liefere alle Slides im gleichen Format, exportierbar als PDF (eine Slide pro Seite).`;
 }
+
+export function referenceDesignPrompt(s, post, img, visual) {
+  const { text } = styleBlock(s, s.graphicPrefs);
+  const isData = img.url.startsWith('data:');
+  const hook = String(post.text || '').split('\n').find((l) => l.trim()) || '';
+  return `Erstelle eine eigene LinkedIn-Grafik, inspiriert von einer erfolgreichen Referenz-Grafik.
+
+Referenz: ${isData ? 'Screenshot aus meinem Swipe-File – ich hänge das Bild an.' : `${img.url}\n(Falls der Link nicht geöffnet werden kann, hänge ich die Grafik als Screenshot an.)`}
+Art der Referenz: ${visual.label}${img.alt ? ` – ${img.alt}` : ''}.
+Warum der Post funktioniert hat: ${(post.why || []).join(', ') || 'starke Reichweite in der Nische'}.
+Ursprünglicher Hook des Posts: „${hook.slice(0, 160)}“
+
+Übernimm nur das Layout-Prinzip, die visuelle Hierarchie und die Wirkung.
+Nicht übernehmen: Texte, Marke, Logos, Fotos von Personen oder eine 1:1-Kopie.
+
+Mein Design:
+${text}
+
+Inhalt: [Hier deine eigene Kernaussage, Zahl oder Liste eintragen]
+
+${RULES}
+
+Liefere das fertige Design, exportierbar als PNG.`;
+}

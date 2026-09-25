@@ -1,6 +1,6 @@
 import { store, uid } from '../store.js';
-import { VIRAL_POSTS, NICHES, POST_TYPES } from '../data.js';
-import { esc, fmtNum, typeLabel, copyText, openModal, toast } from '../ui.js';
+import { VIRAL_POSTS, NICHES, POST_TYPES, VISUALS } from '../data.js';
+import { esc, fmtNum, typeLabel, copyText, openModal, toast, imageFileToDataUrl, safeImageUrl } from '../ui.js';
 import { getDaily, loadDaily, fmtDate } from '../daily.js';
 
 let tab = 'daily';
@@ -118,6 +118,7 @@ function card(p, tab, latest) {
       <div style="min-width:0; flex:1"><div style="font-weight:600">${esc(p.author || 'Unbekannt')}</div><div class="tiny">${esc(p.role || nicheLabel || '')}</div></div>
       ${tab === 'daily' && p.foundAt === latest ? '<span class="tag blue">Neu</span>' : ''}</div>
     <div class="text ${isOpen ? '' : 'clamp'}">${esc(p.text)}</div>
+    ${postImages(p).length ? `<a class="post-img" href="#/gallery?tab=viral" title="In der Grafik-Galerie ansehen"><img src="${esc(postImages(p)[0].url)}" alt="${esc(postImages(p)[0].alt || 'Grafik aus dem Post')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.post-img').remove()">${postImages(p).length > 1 ? `<span class="tag">+${postImages(p).length - 1}</span>` : ''}</a>` : ''}
     ${p.text.split('\n').length > 7 || p.text.length > 400 ? `<button class="btn btn-ghost btn-sm" style="align-self:flex-start" data-expand="${p.id}">${isOpen ? 'Weniger' : '… mehr anzeigen'}</button>` : ''}
     <div class="metrics">${metric(p.likes, 'Reaktionen')}${metric(p.comments, 'Kommentare')}${metric(p.reposts, 'Reposts')}<span>${esc(typeLabel(p.type))}</span>${tab === 'daily' && nicheLabel ? `<span>${esc(nicheLabel)}</span>` : ''}</div>
     ${(p.why || []).length ? `<div><div class="tiny" style="margin-bottom:6px">Warum es funktioniert</div><div class="why">${p.why.map((w) => `<span class="tag blue">${esc(w)}</span>`).join('')}</div></div>` : ''}
@@ -130,6 +131,10 @@ function card(p, tab, latest) {
       ${tab === 'swipe' ? `<button class="btn btn-sm btn-ghost btn-danger" data-del="${p.id}">Entfernen</button>` : ''}
     </div>
   </div>`;
+}
+
+export function postImages(p) {
+  return (p.images || []).map((i) => (typeof i === 'string' ? { url: i } : i)).filter((i) => safeImageUrl(i?.url));
 }
 
 function addModal(s, done) {
@@ -146,14 +151,27 @@ function addModal(s, done) {
         <label class="field">Post-Typ<select name="type">${POST_TYPES.map((t) => `<option value="${t.id}">${t.label}</option>`).join('')}</select></label>
       </div>
       <label class="field">Notiz <span class="hint">Was gefällt dir daran?</span><input type="text" name="note"></label>
+      <div class="grid g2">
+        <label class="field">Grafik hochladen <span class="hint">Screenshot oder Bild aus dem Post – erscheint in der Grafik-Galerie</span><input type="file" name="imagefile" accept="image/*"></label>
+        <label class="field">…oder Bild-Link <span class="hint">https://…</span><input type="text" name="imageurl" placeholder="https://media.licdn.com/…"></label>
+      </div>
+      <label class="field">Art der Grafik<select name="visual"><option value="">– kein Bild –</option>${VISUALS.map((v) => `<option value="${v.id}">${v.label}</option>`).join('')}</select></label>
       <div class="row"><span class="spacer"></span><button type="button" class="btn" data-close>Abbrechen</button><button class="btn btn-primary">Speichern & analysieren</button></div>
     </form>`, { narrow: true });
-  m.el.querySelector('#f').addEventListener('submit', (e) => {
+  m.el.querySelector('#f').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
+    let image = '';
+    try {
+      if (f.imagefile && f.imagefile.size) image = await imageFileToDataUrl(f.imagefile);
+      else if (safeImageUrl(f.imageurl.trim())) image = f.imageurl.trim();
+    } catch (err) {
+      return toast(err.message);
+    }
     store.update((st) => st.swipe.unshift({
       id: `s${uid()}`, own: true, author: f.author.trim(), text: f.text.trim(), niche: f.niche, type: f.type, note: f.note.trim(),
       likes: Number(f.likes) || 0, comments: Number(f.comments) || 0, reposts: Number(f.reposts) || 0, why: analyze(f.text),
+      images: image ? [{ url: image }] : [], visual: image ? f.visual || 'other' : null,
     }));
     tab = 'swipe';
     m.close();

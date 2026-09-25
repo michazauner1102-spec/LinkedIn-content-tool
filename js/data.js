@@ -295,3 +295,19 @@ export const POST_TEMPLATES = [
   { id: 't15', name: 'Trend einordnen', type: 'hottake', text: 'Alle reden über [Trend]. Kaum jemand über [unterschätzten Aspekt].\n\nWas ich in der Praxis sehe:\n→ [Beobachtung 1]\n→ [Beobachtung 2]\n→ [Beobachtung 3]\n\nMeine Einschätzung für [Zielgruppe]: [klare Empfehlung]\n\nWie gehen Sie damit um?' },
   { id: 't16', name: 'Carousel-Begleittext', type: 'carousel', text: '[Versprechen des Carousels] (Carousel)\n\n[1 Satz, warum das wichtig ist]\n\nIm Dokument:\n→ [Inhalt 1]\n→ [Inhalt 2]\n→ [Inhalt 3]\n\nSlide [X] ist mein Favorit.\n\nSpeichern Sie das Dokument für später.' },
 ];
+
+// Art der Grafik in einem viralen Post → passende eigene Vorlage in der Galerie
+export const VISUALS = [
+  { id: 'carousel', label: 'Carousel / Dokument', tpl: 'cover' },
+  { id: 'quote', label: 'Zitat-Karte', tpl: 'quote' },
+  { id: 'stat', label: 'Zahl / Statistik', tpl: 'stat' },
+  { id: 'list', label: 'Liste / Checkliste', tpl: 'list' },
+  { id: 'infographic', label: 'Infografik / Framework', tpl: 'framework' },
+  { id: 'chart', label: 'Diagramm', tpl: 'progress' },
+  { id: 'beforeafter', label: 'Vorher / Nachher', tpl: 'beforeafter' },
+  { id: 'comparison', label: 'Vergleich', tpl: 'compare' },
+  { id: 'screenshot', label: 'Screenshot', tpl: 'tweet' },
+  { id: 'textgraphic', label: 'Text-Grafik', tpl: 'hottake' },
+  { id: 'photo', label: 'Foto', tpl: null },
+  { id: 'other', label: 'Sonstiges', tpl: 'quote' },
+];
